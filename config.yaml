@@ -12,14 +12,14 @@ policies:
       date:
         attribute: created_at
         condition: older_than
-        interval_type: days #
+        interval_type: days
         interval: 10
       state: opened
       milestone: v1
       labels:
         - label 1
         - label 2
-      forbidden_labels: #
+      forbidden_labels:
         - label 3
       discussion:
         attribute: threads
