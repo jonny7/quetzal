@@ -16,7 +16,7 @@ test:
   script:
     - go vet $(go list ./... | grep -v /vendor/)
     - go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
-    - go get github.com/jstemmer/go-junit-report
+    - go install github.com/jstemmer/go-junit-report@latest
     - go test -v 2>&1 | go-junit-report > report.xml
   artifacts:
     when: always
