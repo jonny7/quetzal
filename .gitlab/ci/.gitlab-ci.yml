@@ -1,0 +1,18 @@
+image: golang:latest
+
+variables:
+  REPO_NAME: gitlab.com/jonny7/quetzal
+
+before_script:
+  - mkdir -p $GOPATH/src/$(dirname $REPO_NAME)
+  - ln -svf $CI_PROJECT_DIR $GOPATH/src/$REPO_NAME
+  - cd $GOPATH/src/$REPO_NAME
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - go vet $(go list ./... | grep -v /vendor/)
+    - go test -v ./... -race -covermode=atomic -coverprofile=coverage.out

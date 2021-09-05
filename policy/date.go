@@ -2,8 +2,13 @@ package policy
 
 import "fmt"
 
+// DateAttribute is the updated or created property
 type DateAttribute string
+
+// DateCondition is the greater than or less than [date] filter
 type DateCondition string
+
+// DateIntervalType is the type of available interval
 type DateIntervalType string
 
 // Date is possible condition that can be used to allow or
