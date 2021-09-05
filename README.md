@@ -2,3 +2,5 @@
 
 > This main repository for Quetzal is [GitLab](https://gitlab.com/jonny7/quetzal). Please create issues and questions there. [Github](https://github.com/jonny7/quetzal) is a mirror of that repo
 # Quetzal
+
+The Quetzal icon is attributed to [FreePick](https://www.freepik.com)
