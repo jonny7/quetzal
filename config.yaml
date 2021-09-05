@@ -1,0 +1,72 @@
+user: username@gitlab.com
+token: notareatoken
+repoHost: https://yourdomain.com
+botServer: https://bot-bot.com
+endpoint: /hooks/v1/mywebhook
+secret: webhook-secret
+port: :8010
+policies:
+  - assign:mrs:
+    name: assign MR
+    conditions:
+      date:
+        attribute: created_at
+        condition: older_than
+        interval_type: days #
+        interval: 10
+      state: opened
+      milestone: v1
+      labels:
+        - label 1
+        - label 2
+      forbidden_labels: #
+        - label 3
+      discussion:
+        attribute: threads
+        condition: less_than
+        threshold: 15
+    limit:
+      most_recent: 50
+    actions:
+      http:
+        once: true
+        method: post
+        endpoint: /project/:id/approval_merge
+        iterate:
+          attribute: user_id
+      labels:
+        - needs work
+      remove_labels:
+        - done
+      status: close
+      mention:
+        - someone
+        - someone2
+      comment: |
+        Closing this issue, thanks for the fix {{author}}
+  - remove:done:
+    name: Second thing
+    conditions:
+      date:
+        attribute: created_at
+        condition: older_than
+        interval_type: days
+        interval: 10
+      state: opened
+      milestone: v1
+      labels:
+        - label 1
+        - label 2
+    limit:
+      oldest: 5
+    actions:
+      labels:
+        - needs work
+      remove_labels:
+        - done
+      status: close
+      mention:
+        - someone
+        - someone2
+      comment: |
+        Closing this issue, thanks for the fix {{author}}
