@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/jonny7/gitlab-bot/bot"
+	"gitlab.com/jonny7/quetzal/bot"
 	"log"
 	"net/http"
 )

@@ -1,6 +1,9 @@
 package policy
 
+// DiscussionAttribute is the type of discussion
 type DiscussionAttribute string
+
+// DiscussionCondition identifies to amount of threads required
 type DiscussionCondition string
 
 // Discussion represents a Gitlab discussion
