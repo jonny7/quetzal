@@ -9,7 +9,7 @@ type Action struct {
 	// Labels identifies which labels to add to an issue
 	Labels []string `yaml:"labels,omitempty"`
 	// RemoveLabels defines what labels to remove
-	RemoveLabels []string `yaml:"remove_labels,omitempty"`
+	RemoveLabels []string `yaml:"removeLabels,omitempty"`
 	// Status sets the status of the issue
 	Status string `yaml:"status,omitempty"`
 	// Mention allows the bot to mention certain users

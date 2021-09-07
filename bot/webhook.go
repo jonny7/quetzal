@@ -1,10 +1,5 @@
 package bot
 
-import (
-	"fmt"
-	"os"
-)
-
 // EventType represents a GitLab Webhook type as string
 type EventType string
 
@@ -30,12 +25,4 @@ type Webhook struct {
 
 func (w *Webhook) handleEvent(options Config) (interface{}, error) {
 	return nil, nil
-}
-
-func (w *Webhook) source(name string) ([]byte, error) {
-	f, err := os.ReadFile(name)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't read file: %v", err)
-	}
-	return f, nil
 }
