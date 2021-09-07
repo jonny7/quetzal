@@ -12,21 +12,21 @@ policies:
       date:
         attribute: created_at
         condition: older_than
-        interval_type: days
+        intervalType: days
         interval: 10
       state: opened
       milestone: v1
       labels:
         - label 1
         - label 2
-      forbidden_labels:
+      forbiddenLabels:
         - label 3
       discussion:
         attribute: threads
         condition: less_than
         threshold: 15
     limit:
-      most_recent: 50
+      mostRecent: 50
     actions:
       http:
         once: true
@@ -36,7 +36,7 @@ policies:
           attribute: user_id
       labels:
         - needs work
-      remove_labels:
+      removeLabels:
         - done
       status: close
       mention:
@@ -50,7 +50,7 @@ policies:
       date:
         attribute: created_at
         condition: older_than
-        interval_type: days
+        intervalType: days
         interval: 10
       state: opened
       milestone: v1
@@ -62,7 +62,7 @@ policies:
     actions:
       labels:
         - needs work
-      remove_labels:
+      removeLabels:
         - done
       status: close
       mention:

@@ -58,6 +58,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 		if err != nil {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Could not decode webhook: %v", err)})
 		}
+		// @todo complete this handler, omitted for small unit tests
 		_, err = webhook.handleEvent(*b.Config)
 		if err != nil {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Some error occurred: %v", err)})
