@@ -1,0 +1,8 @@
+user: username@gitlab.com
+token: notareatoken
+repoHost: https://yourdomain.com
+botServer: https://bot-bot.com
+endpoint: /hooks/v1/mywebhook
+secret: webhook-secret
+port: :8010
+policyPath: ../examples/.policies.yaml
