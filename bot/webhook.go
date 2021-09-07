@@ -1,5 +1,10 @@
 package bot
 
+import (
+	"encoding/json"
+	"io"
+)
+
 // EventType represents a GitLab Webhook type as string
 type EventType string
 
@@ -21,6 +26,16 @@ const (
 // it simply decodes in a type-safe way the event type
 type Webhook struct {
 	ObjectKind EventType `json:"object_kind"`
+}
+
+// decodeWebhook decodes webhook from Gitlab
+func decodeWebhook(body io.Reader) (*Webhook, error) {
+	var webhook Webhook
+	err := json.NewDecoder(body).Decode(&webhook)
+	if err != nil {
+		return nil, err
+	}
+	return &webhook, nil
 }
 
 func (w *Webhook) handleEvent(options Config) (interface{}, error) {

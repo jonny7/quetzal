@@ -1,14 +1,12 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog"
 	"gitlab.com/jonny7/quetzal/policy"
 	"gopkg.in/yaml.v3"
-	"io"
 	"net/http"
 	"os"
 )
@@ -16,14 +14,15 @@ import (
 // Config is the user declared details provided from the yaml file
 // it contains general info for the bot along with a `Policies` property
 type Config struct {
-	User      string          `yaml:"user"`
-	Token     string          `yaml:"token"`
-	RepoHost  string          `yaml:"repoHost"`
-	BotServer string          `yaml:"botServer"`
-	Endpoint  string          `yaml:"endpoint"`
-	Secret    string          `yaml:"secret"`
-	Port      string          `yaml:"port"`
-	Policies  []policy.Policy `yaml:"policies"`
+	User       string          `yaml:"user"`
+	Token      string          `yaml:"token"`
+	RepoHost   string          `yaml:"repoHost"`
+	BotServer  string          `yaml:"botServer"`
+	Endpoint   string          `yaml:"endpoint"`
+	Secret     string          `yaml:"secret"`
+	Port       string          `yaml:"port"`
+	policyPath string          `yaml:"policyPath"`
+	Policies   []policy.Policy `yaml:"policies"`
 }
 
 // Bot struct encapsulates all behaviour of the bot
@@ -48,6 +47,8 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (b *Bot) routes(r *chi.Mux) {
 	r.Post(b.Config.Endpoint, b.webhookSecret(b.processWebhook()))
 	r.Get("/ping", b.ping())
+	r.Get("/policies", b.policies())
+	r.Post("/reload", b.reload())
 }
 
 // processWebhook is the main endpoint for this bot
@@ -67,16 +68,6 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 	}
 }
 
-// decodeWebhook decodes webhook from Gitlab
-func decodeWebhook(body io.Reader) (*Webhook, error) {
-	var webhook Webhook
-	err := json.NewDecoder(body).Decode(&webhook)
-	if err != nil {
-		return nil, err
-	}
-	return &webhook, nil
-}
-
 // ping just provides a simple bot health endpoint
 func (b *Bot) ping() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -84,12 +75,31 @@ func (b *Bot) ping() http.HandlerFunc {
 	}
 }
 
+// policies endpoint returns all the loaded policies for the bot
+func (b *Bot) policies() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.Respond(w, r, b.Config.Policies)
+	}
+}
+
+// reload will attempt to reload the bot's policies
+func (b *Bot) reload() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := b.loadPolicies(b.Config.policyPath)
+		if err != nil {
+			w.WriteHeader(400)
+			render.Respond(w, r, Message{Msg: fmt.Sprintf("policies couldn't be reloaded: %v", err)})
+		}
+		render.Respond(w, r, Message{Msg: "policies reloaded"})
+	}
+}
+
 // loadConfig takes the user specified yaml file
 // and loads it into the Config struct
-func loadConfig(name, path string) (*Config, error) {
-	f, err := os.ReadFile(path + name)
+func loadConfig(path string) (*Config, error) {
+	f, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("config file could not be loaded at location: %s%s", path, name)
+		return nil, fmt.Errorf("config file could not be loaded at location: %s", path)
 	}
 	var config Config
 	err = yaml.Unmarshal(f, &config)
@@ -99,20 +109,45 @@ func loadConfig(name, path string) (*Config, error) {
 	return &config, nil
 }
 
+// loadPolicies loads the specified policies.yml file
+func (b *Bot) loadPolicies(path string) error {
+	f, err := os.ReadFile(path)
+	if err != nil {
+		e := fmt.Errorf("policies file could not be loaded at location: %s", path)
+		b.Logger.Info().Msg(e.Error())
+		return e
+	}
+	var policies policy.Policies
+
+	err = yaml.Unmarshal(f, &policies)
+	if err != nil {
+		e := fmt.Errorf("policy file could not be unmarshalled, error:%v", err)
+		b.Logger.Info().Msg(e.Error())
+		return e
+	}
+	b.Config.Policies = policies.Policies
+	return nil
+}
+
 // New creates a new bot taking the config filename and path from `main`'s arguments
-func New(name, path string) (*Bot, error) {
+func New(config, policies string) (*Bot, error) {
 	logger := zerolog.New(os.Stdout)
-	config, err := loadConfig(name, path)
+	c, err := loadConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	s := &Bot{
+	b := &Bot{
 		Router: chi.NewRouter(),
 		Logger: logger,
-		Config: config,
+		Config: c,
 	}
-	s.Router.Use(render.SetContentType(render.ContentTypeJSON))
-	s.routes(s.Router)
-	return s, nil
+	err = b.loadPolicies(policies)
+	if err != nil {
+		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
+	}
+
+	b.Router.Use(render.SetContentType(render.ContentTypeJSON))
+	b.routes(b.Router)
+	return b, nil
 }
