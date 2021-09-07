@@ -8,13 +8,13 @@ WORKDIR /go/src/gitlab.com/jonny7/quetzal
 COPY . .
 
 RUN go mod download
-RUN go build -o main ./app
+RUN go build -o quetzal ./cmd
 
 EXPOSE 8010
 
 FROM scratch
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /go/src/gitlab.com/jonny7/quetzal/main ./main
+COPY --from=builder /go/src/gitlab.com/jonny7/quetzal/quetzal ./quetzal
 
 CMD ["./main"]
