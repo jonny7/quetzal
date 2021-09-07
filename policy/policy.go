@@ -8,3 +8,8 @@ type Policy struct {
 	Limit      Limit     `yaml:"limit,omitempty"`
 	Actions    Action    `yaml:"actions,omitempty"`
 }
+
+// Policies contains a slice of `Policy`s
+type Policies struct {
+	Policies []Policy `yaml:"policies"`
+}

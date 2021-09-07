@@ -2,25 +2,33 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"gitlab.com/jonny7/quetzal/bot"
 	"log"
 	"net/http"
 )
 
-func main() {
-	var name, path string
+const v = "0.0.0"
 
-	flag.StringVar(&name, "config", "config.yaml", "The config file name (no extension)")
-	flag.StringVar(&path, "path", "./", "The path to the config file, including directory separator")
+func main() {
+	var config, policies string
+
+	flag.StringVar(&config, "config", "./config.yaml", "The relative path to the config file name and extension")
+	flag.StringVar(&policies, "policies", "./.policies.yaml", "The relative path to the policies file")
+	version := flag.Bool("version", false, "display version of quetzal")
 	flag.Parse()
 
-	if err := run(name, path); err != nil {
+	if *version {
+		fmt.Printf("Quetzal version %v", v)
+	}
+
+	if err := run(config, policies); err != nil {
 		log.Fatalf("error launching bot %v", err)
 	}
 }
 
-func run(name, path string) error {
-	b, err := bot.New(name, path)
+func run(config, policies string) error {
+	b, err := bot.New(config, policies)
 	if err != nil {
 		return err
 	}
