@@ -5,8 +5,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"gitlab.com/jonny7/quetzal/policy"
 	"gopkg.in/yaml.v3"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -58,11 +61,13 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 		webhook, err := decodeWebhook(r.Body)
 		if err != nil {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Could not decode webhook: %v", err)})
+			return
 		}
 		// @todo complete this handler, omitted for small unit tests
 		_, err = webhook.handleEvent(*b.Config)
 		if err != nil {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Some error occurred: %v", err)})
+			return
 		}
 		render.Respond(w, r, nil)
 	}
@@ -85,45 +90,76 @@ func (b *Bot) policies() http.HandlerFunc {
 // reload will attempt to reload the bot's policies
 func (b *Bot) reload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := b.loadPolicies(b.Config.policyPath)
+		reader, err := createReader(b.Config.policyPath)
 		if err != nil {
-			w.WriteHeader(400)
+			w.WriteHeader(500)
+			render.Respond(w, r, Message{Msg: fmt.Sprintf("could not create reader for policy file: %v", err)})
+			return
+		}
+		err = b.loadPolicies(reader)
+		if err != nil {
+			w.WriteHeader(500)
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("policies couldn't be reloaded: %v", err)})
+			return
 		}
 		render.Respond(w, r, Message{Msg: "policies reloaded"})
 	}
 }
 
-// loadConfig takes the user specified yaml file
-// and loads it into the Config struct
-func loadConfig(path string) (*Config, error) {
-	f, err := os.ReadFile(path)
+// createReader takes a file location and returns an io.ReaderCloser
+func createReader(file string) (io.ReadCloser, error) {
+	f, err := os.Open(file)
 	if err != nil {
-		return nil, fmt.Errorf("config file could not be loaded at location: %s", path)
+		return nil, err
 	}
+	return f, err
+}
+
+// loadConfig takes an io.ReaderCloser
+// and attempts to load it into the Config struct
+func loadConfig(reader io.ReadCloser) (*Config, error) {
+	defer func(reader io.ReadCloser) {
+		err := reader.Close()
+		if err != nil {
+			log.Error().Msg(fmt.Sprintf("the config file failed to close: %v", err))
+		}
+	}(reader)
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	var config Config
-	err = yaml.Unmarshal(f, &config)
+	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, fmt.Errorf("config file could not be unmarshalled, error:%v", err)
+		log.Error().Msg(fmt.Sprintf("config file could not be read, error:%v", err))
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(body, &config)
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("config file could not be unmarshalled, error:%v", err))
+		return nil, err
 	}
 	return &config, nil
 }
 
 // loadPolicies loads the specified policies.yml file
-func (b *Bot) loadPolicies(path string) error {
-	f, err := os.ReadFile(path)
-	if err != nil {
-		e := fmt.Errorf("policies file could not be loaded at location: %s", path)
-		b.Logger.Info().Msg(e.Error())
-		return e
-	}
-	var policies policy.Policies
+func (b *Bot) loadPolicies(reader io.ReadCloser) error {
+	defer func(reader io.ReadCloser) {
+		err := reader.Close()
+		if err != nil {
+			b.Logger.Error().Msg(fmt.Sprintf("the config file failed to close: %v", err))
+		}
+	}(reader)
 
-	err = yaml.Unmarshal(f, &policies)
+	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		e := fmt.Errorf("policy file could not be unmarshalled, error:%v", err)
-		b.Logger.Info().Msg(e.Error())
-		return e
+		log.Error().Msg(fmt.Sprintf("policy file could not be read, error:%v", err))
+		return err
+	}
+
+	var policies policy.Policies
+	err = yaml.Unmarshal(body, &policies)
+	if err != nil {
+		b.Logger.Info().Msg(fmt.Sprintf("policy file could not be unmarshalled, error:%v", err))
+		return err
 	}
 	b.Config.Policies = policies.Policies
 	return nil
@@ -132,7 +168,11 @@ func (b *Bot) loadPolicies(path string) error {
 // New creates a new bot taking the config filename and path from `main`'s arguments
 func New(config, policies string) (*Bot, error) {
 	logger := zerolog.New(os.Stdout)
-	c, err := loadConfig(config)
+	reader, err := createReader(config)
+	if err != nil {
+		logger.Fatal().Msg(fmt.Sprintf("an error occured creating a reader for the config file: %v", err))
+	}
+	c, err := loadConfig(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +182,12 @@ func New(config, policies string) (*Bot, error) {
 		Logger: logger,
 		Config: c,
 	}
-	err = b.loadPolicies(policies)
+
+	p, err := createReader(policies)
+	if err != nil {
+		b.Logger.Error().Msg(fmt.Sprintf("an error occured creating a reader for the policy file: %v", err))
+	}
+	err = b.loadPolicies(p)
 	if err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
 	}
