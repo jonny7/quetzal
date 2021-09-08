@@ -10,7 +10,7 @@ COPY . .
 RUN go mod download
 RUN go build -o quetzal ./cmd
 
-EXPOSE 8010
+EXPOSE 7838
 
 FROM scratch
 

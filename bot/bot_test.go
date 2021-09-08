@@ -1,19 +1,19 @@
 package bot
 
 import (
-	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"gitlab.com/jonny7/quetzal/policy"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
 func TestConfig(t *testing.T) {
-	c, err := loadConfig("../examples/config.yaml")
+	reader, _ := createReader("../examples/config.yaml")
+	c, err := loadConfig(reader)
 	if err != nil {
 		t.Errorf("config failed: %v", err)
 	}
@@ -25,7 +25,7 @@ func TestConfig(t *testing.T) {
 }
 
 func TestFailedConfig(t *testing.T) {
-	_, err := loadConfig("invalid")
+	_, err := createReader("invalid")
 	if err == nil {
 		t.Errorf("expected a failed config error, but got: %v", err)
 	}
@@ -37,7 +37,9 @@ func TestLoadPolicies(t *testing.T) {
 		Logger: zerolog.Logger{},
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	_ = b.loadPolicies("../examples/.policies.yaml")
+	reader, _ := createReader("../examples/.policies.yaml")
+	err := b.loadPolicies(reader)
+	fmt.Println(err)
 
 	if len(b.Config.Policies) != 2 {
 		t.Errorf("expected 2 policies, but got: %v", len(b.Config.Policies))
@@ -86,21 +88,14 @@ func TestPing(t *testing.T) {
 	}
 }
 
-func TestDecodeWebhook(t *testing.T) {
-	body := strings.NewReader(`{"object_kind": "merge_request"}`)
-	got, _ := decodeWebhook(bufio.NewReader(body))
-	if got.ObjectKind != MergeRequest {
-		t.Errorf("expected %s, but got: %v", MergeRequest, got.ObjectKind)
-	}
-}
-
 func TestPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: zerolog.Logger{},
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	_ = b.loadPolicies("../examples/.policies.yaml")
+	reader, _ := createReader("../examples/.policies.yaml")
+	err := b.loadPolicies(reader)
 
 	b.routes(b.Router)
 	w := httptest.NewRecorder()
@@ -109,13 +104,13 @@ func TestPolicies(t *testing.T) {
 	b.ServeHTTP(w, req)
 
 	var msg []policy.Policy
-	err := json.NewDecoder(w.Body).Decode(&msg)
+	err = json.NewDecoder(w.Body).Decode(&msg)
 	if err != nil {
 		t.Errorf("response couldn't be decoded: %v", err)
 	}
 
 	if len(msg) != 2 {
-		t.Errorf("expected pong response, but got: %v", err)
+		t.Errorf("expected 2 policies returned, but got: %v", err)
 	}
 }
 
@@ -141,5 +136,26 @@ func TestReload(t *testing.T) {
 
 	if len(b.Config.Policies) != 2 {
 		t.Errorf("expected 2 policies, recevied %d", len(b.Config.Policies))
+	}
+}
+
+func TestReloadInvalidPath(t *testing.T) {
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	b.routes(b.Router)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/reload", nil)
+
+	b.ServeHTTP(w, req)
+
+	want := 500
+	got := w.Code
+
+	if got != want {
+		t.Errorf("expected %d, but got: %d", want, got)
 	}
 }
