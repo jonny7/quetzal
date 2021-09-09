@@ -34,7 +34,7 @@ func (d DateAttribute) Validate() error {
 		"updated_at":
 		return nil
 	}
-	return fmt.Errorf("`date:attribute` expected values created_at, updated_at, But received: %v", d)
+	return fmt.Errorf("`date:attribute` expected value of either `created_at`, `updated_at`, But received: %v", d)
 }
 
 // DateCondition is the greater than or less than [date] filter

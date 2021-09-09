@@ -165,6 +165,16 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 	return nil
 }
 
+// validatePolicies validates all the policies and fields where only certain values are allowed
+func (b *Bot) validatePolicies() error {
+	for i, p := range b.Config.Policies {
+		if err := p.Conditions.Date.Attribute.Validate(); err != nil {
+			return fmt.Errorf("policy number %d, name: %s failed validation: %v", i+1, p.Name, err)
+		}
+	}
+	return nil
+}
+
 // New creates a new bot taking the config filename and path from `main`'s arguments
 func New(config, policies string) (*Bot, error) {
 	logger := zerolog.New(os.Stdout)
@@ -187,9 +197,12 @@ func New(config, policies string) (*Bot, error) {
 	if err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("an error occured creating a reader for the policy file: %v", err))
 	}
-	err = b.loadPolicies(p)
-	if err != nil {
+	if err = b.loadPolicies(p); err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
+	}
+
+	if err = b.validatePolicies(); err != nil {
+		b.Logger.Error().Msg(fmt.Sprintf("invalid policy: %v", err))
 	}
 
 	b.Router.Use(render.SetContentType(render.ContentTypeJSON))
