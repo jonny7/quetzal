@@ -1,6 +1,8 @@
 package policy
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDateIntervalTypeValidate(t *testing.T) {
 	dit := DateIntervalType("weeks")
