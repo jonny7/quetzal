@@ -2,7 +2,6 @@ package bot
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"gitlab.com/jonny7/quetzal/policy"
@@ -38,8 +37,7 @@ func TestLoadPolicies(t *testing.T) {
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
 	reader, _ := createReader("../examples/.policies.yaml")
-	err := b.loadPolicies(reader)
-	fmt.Println(err)
+	_ = b.loadPolicies(reader)
 
 	if len(b.Config.Policies) != 2 {
 		t.Errorf("expected 2 policies, but got: %v", len(b.Config.Policies))

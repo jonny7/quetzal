@@ -8,7 +8,7 @@ WORKDIR /go/src/gitlab.com/jonny7/quetzal
 COPY . .
 
 RUN go mod download
-RUN go build -o quetzal ./cmd
+RUN go build -o quetzal ./cmd/quetzal
 
 EXPOSE 7838
 

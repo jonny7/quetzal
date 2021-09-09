@@ -1,6 +1,15 @@
 package policy
 
-import "testing"
+import (
+	"fmt"
+	"reflect"
+	"runtime"
+	"testing"
+)
+
+func getFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
 
 func TestDateIntervalTypeValidate(t *testing.T) {
 	dit := DateIntervalType("weeks")
@@ -35,6 +44,9 @@ func TestDateConditionValidateInvalid(t *testing.T) {
 }
 
 func TestDateAttributeValidate(t *testing.T) {
+	id := 1
+	f := getFunctionName(getFunctionName(TestDateAttributeValidate))
+	fmt.Println(id, f)
 	da := DateAttribute("created_at")
 	got := da.Validate()
 	if got != nil {
