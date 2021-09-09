@@ -21,7 +21,7 @@ go build -o quetzal ./cmd
 ```
 
 #### Versioning
-Quetzal uses the SemvVer specification. To query the binary, use the `-version` flag
+Quetzal uses the SemVer specification. To query the binary, use the `-version` flag
 ```shell
 ./quetzal -version
 # Quetzal version 1.1.1
@@ -51,18 +51,10 @@ You can see examples of both of these file in the `examples` directory.
 
 ### Policies
 
-Policies are what drives `Quetzal`. There are 4 main properties to a policy with them all be technically optional. 
+Policies are what drives `Quetzal`. There are 4 main properties to a policy, with them all be technically optional. 
 Though most likely, you'll always want an `action` and `name`.
 
 A single `Policy` is declared as part of an array of the `Policies` property.
-
-```yaml
-policies:
-  - your:custom:declared:name:
-    #...
-  - another:policy:
-    #...
-```
 
 #### Policy Properties
 - [Name](#policy-name)
@@ -72,12 +64,16 @@ policies:
 
 #### Policy Name
 ```yaml
-name: Awesome Policy 
+policies:
+  - name: Awesome Policy
+    #...
+  - name: Round robin assignee
+    #...
 ```
 
 #### Policy Conditions
 Policy Conditions allow a user to specify a series of conditions that confirm that this webhook event be processed.
-All available options are type-safe and validated that once, the policies file can be successfully parsed.
+All available options are type-safe and validated, once the policies file has been successfully parsed.
 
 
 - [Date](#date-condition)

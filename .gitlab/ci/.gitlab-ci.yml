@@ -11,9 +11,11 @@ before_script:
 stages:
   - test
 
-test:
+quetzal:test:
   stage: test
   script:
+    - mkdir tmp
+    - echo "" > tmp/requirements.json
     - go vet $(go list ./... | grep -v /vendor/)
     - go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
     - go install github.com/jstemmer/go-junit-report@latest
@@ -22,3 +24,4 @@ test:
     when: always
     reports:
       junit: report.xml
+      requirements: tmp/requirements.json

@@ -1,6 +1,5 @@
 policies:
-  - assign:mrs:
-    name: assign MR
+  - name: assign MR
     conditions:
       date:
         attribute: created_at
@@ -37,8 +36,7 @@ policies:
         - someone2
       comment: |
         Closing this issue, thanks for the fix {{author}}
-  - remove:done:
-    name: Second thing
+  - name: Second thing
     conditions:
       state: opened
       labels:
