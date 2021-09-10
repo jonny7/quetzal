@@ -37,6 +37,7 @@ func TestDateConditionValidateInvalid(t *testing.T) {
 }
 
 func TestDateAttributeValidate(t *testing.T) {
+	//: 1
 	da := DateAttribute("created_at")
 	got := da.Validate()
 	if got != nil {
@@ -45,6 +46,7 @@ func TestDateAttributeValidate(t *testing.T) {
 }
 
 func TestDateAttributeValidateInvalid(t *testing.T) {
+	//: 1
 	da := DateAttribute("another_date")
 	got := da.Validate()
 	if got == nil {
