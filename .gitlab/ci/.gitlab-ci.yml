@@ -25,7 +25,7 @@ quetzal:test:
       junit: report.xml
 
 requirements:check:
-  stage: test
+  stage: requirements
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
