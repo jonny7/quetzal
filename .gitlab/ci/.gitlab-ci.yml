@@ -21,6 +21,8 @@ quetzal:test:
     - go test -v ./... 2>&1 | go-junit-report > report.xml
   artifacts:
     when: always
+    paths:
+      - report.xml
     reports:
       junit: report.xml
 
@@ -29,8 +31,6 @@ requirements:check:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - cd /builds
-    - ls
     - go build -o matrix ./cmd/matrix
     - ./matrix
   dependencies:
