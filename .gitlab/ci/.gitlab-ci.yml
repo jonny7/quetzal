@@ -29,6 +29,7 @@ requirements:check:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
+    - cd ../../
     - ls
     - go build -o matrix ./cmd/matrix
     - ./matrix
