@@ -13,7 +13,7 @@ var testHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 func TestInvalidWebhookSecret(t *testing.T) {
 	srv := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Secret: "extremely-secret", Endpoint: "/webhook-endpoint"},
 	}
 
@@ -34,7 +34,7 @@ func TestInvalidWebhookSecret(t *testing.T) {
 func TestWebhookSecret(t *testing.T) {
 	srv := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Secret: "extremely-secret", Endpoint: "/webhook-endpoint"},
 	}
 
@@ -55,7 +55,7 @@ func TestWebhookSecret(t *testing.T) {
 func TestEmptyWebhookSecret(t *testing.T) {
 	srv := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Secret: "", Endpoint: "/webhook-endpoint"},
 	}
 
