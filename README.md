@@ -11,13 +11,33 @@ The easiest way is using Docker.
 docker run --name my-quetzal -d -p 7838:7838 jonny7/quetzal 
 ```
 
-However, you can build the source and run it yourself
+However, you can build the source yourself
 ```shell
-go build -o quetzal ./cmd
-# if your config and policy files are in the default locations then no other command is needed
-./quetzal 
-# otherwise, paths are relative to the quetzal binary
-./quetzal -config="./path/to/file" -policies="../path/to/policies"
+go build -o quetzal ./cmd/quetzal
+```
+
+#### Usage
+```shell
+./quetzal -h
+Usage of ./quetzal:
+  -bot-server string
+        The base URL the bot lives on (default "https://bot-bot.com")
+  -dry-run
+        don't perform any actions, just print out the actions that would be taken if live
+  -policies string
+        The relative path to the policies file (default "./.policies.yaml")
+  -port int
+        The port the bot listens on (default 7838)
+  -token string
+        The personal access token for the stated user (default "notareatoken")
+  -user string
+        The Gitlab user this bot will act as (default "username@gitlab.com")
+  -version
+        display version of quetzal
+  -webhook-endpoint string
+        The webhook endpoint (default "/webhook/path")
+  -webhook-secret string
+        The (optional) webhook secret  (default "1234abcd")
 ```
 
 #### Versioning
@@ -28,26 +48,13 @@ Quetzal uses the SemVer specification. To query the binary, use the `-version` f
 ```
 
 ### How Quetzal works
-At its heart, Quetzal is a yaml driven policy based bot. It needs 2 things, a config file and a policy file. Both are `yaml` based and have default locations provided. Please note these are relative to the Quetzal binary.
+At its heart, Quetzal is a yaml driven policy based bot. It needs some config parameters (listed above) and a policy file. The policy file is `yaml` based and has a default location provided. Please note this is relative to the Quetzal binary.
 
 | File type   | Default location       |
 | ----------- | ---------------------- |
-| config.yaml | ./config.yaml          |
 | .policies.yaml | ./.policies.yaml    |
 
 You can see examples of both of these file in the `examples` directory.
-
-#### Config Options
-| Property  | Usage |
-| --------- | ----- |
-| user      | The Gitlab user this bot will act as |
-| token     | The personal access token for the stated `user` |
-| repoHost  | The base URL for the GitLab instance |
-| botServer | The base URL for where Quetzal is running |
-| endpoint  | The endpoint where GitLab will be sending webhooks |
-| secret    | (optional) the secret used by Quetzal to confirm the legitimacy of the webhook|
-| port      | The port Quetzal will run on |
-| policyPath| The relative path from ./quetzal to the policy file | 
 
 ### Policies
 
