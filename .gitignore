@@ -2,3 +2,5 @@
 .DS_Store
 coverage.out
 report.xml
+requirements-matrix.csv
+requirements.json
