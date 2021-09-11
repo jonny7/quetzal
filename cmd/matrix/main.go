@@ -3,7 +3,7 @@ This is purely a utility function for working with GitLab requirements.
 
 The `matrix` flag will find all the files that
 contain `_test.go` as per Go convention and parse them, extracting the function name only (no signature details).
-It will look for the special `//: n,n...` where you should specify what requirement in GitLab this test qualifies.
+It will look for the special `//: n,n...` where you should specify what requirement(s) in GitLab this test satisfies.
 multiple references should be use comma separators with no space.
 
 The `results` flag will generate the requirements.json file used by GitLab to determine if a requirement has been satisfied.
@@ -13,6 +13,7 @@ the matrix.
 package main
 
 import (
+	"encoding/xml"
 	"flag"
 	"log"
 	"os"
@@ -29,6 +30,26 @@ type Requirement struct {
 	ID       int
 }
 
+const (
+	passed = "passed"
+	failed = "failed"
+)
+
+type Status struct {
+	RequirementID int
+	Status        string
+}
+
+type JunitResult struct {
+	Name    string `xml:"name,attr"`
+	Failure string `xml:"failure"`
+}
+
+var resultTemplate = "{{$lastIdx := LastIdx (len .)}}{\n\t{{range $i, $el := .}}  \"{{$el.RequirementID}}\":\"{{$el.Status}}\"{{if eq $lastIdx $i}}{{else}},\n{{end}}{{end}}\n}"
+var lister = template.Must(template.New("foo").Funcs(template.FuncMap{
+	"LastIdx": func(size int) int { return size - 1 },
+}).Parse(resultTemplate))
+
 var matrixTemplate = template.Must(template.New("").Parse(
 	`Requirement ID, Test Case{{range .}}
 REQ-{{.ID}},{{.TestCase}}{{end}}`))
@@ -37,15 +58,16 @@ func main() {
 	matrix := flag.Bool("matrix", true, "generate the requirements matrix - see `generateMatrix()`")
 	results := flag.Bool("results", true, "generate the corresponding results.json file required by GitLab to mark requirements as satisfied or not")
 
+	var reqs []Requirement
 	if *matrix {
-		generateMatrix()
+		reqs = generateMatrix()
 	}
 	if *results {
-		generateResults()
+		generateResults(reqs)
 	}
 }
 
-func generateMatrix() {
+func generateMatrix() []Requirement {
 	f, err := os.Create("./requirements-matrix.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -83,6 +105,7 @@ func generateMatrix() {
 	if err != nil {
 		log.Println("template failed")
 	}
+	return requirements
 }
 
 func parseFile(contents string) []Requirement {
@@ -110,7 +133,7 @@ func parseFile(contents string) []Requirement {
 	return results
 }
 
-func generateResults() {
+func generateResults(reqs []Requirement) {
 	f, err := os.Create("./requirements.json")
 	if err != nil {
 		log.Fatal(err)
@@ -121,4 +144,69 @@ func generateResults() {
 			log.Println("requirements.json could not be closed")
 		}
 	}(f)
+
+	var mappedRequirements = make(map[int][]string)
+	for _, r := range reqs {
+		mappedRequirements[r.ID] = append(mappedRequirements[r.ID], r.TestCase)
+	}
+
+	junit, xmlErr := os.Open("./report.xml")
+	if xmlErr != nil {
+		log.Fatal(xmlErr)
+	}
+
+	var junitResults []JunitResult
+
+	stream := xml.NewDecoder(junit)
+	for {
+		var junitResult JunitResult
+		token, tokenErr := stream.Token()
+		if tokenErr != nil {
+			break
+		}
+		switch elementType := token.(type) {
+		case xml.StartElement:
+			if elementType.Name.Local == "testcase" {
+				if e := stream.DecodeElement(&junitResult, &elementType); e != nil {
+					log.Fatal(e)
+				}
+				junitResults = append(junitResults, junitResult)
+			}
+		}
+	}
+	var requirementResults []Status
+	for k, v := range mappedRequirements {
+		status := Status{RequirementID: k}
+		var pass = false
+		for _, testCase := range v {
+			r := filterJunitResult(testCase, junitResults)
+			if r == false {
+				pass = false
+				break
+			} else {
+				pass = true
+			}
+		}
+		if pass {
+			status.Status = passed
+		} else {
+			status.Status = failed
+		}
+		requirementResults = append(requirementResults, status)
+	}
+	err = lister.Execute(f, requirementResults)
+	if err != nil {
+		log.Println("result template failed")
+	}
+}
+
+func filterJunitResult(testName string, results []JunitResult) bool {
+	for _, j := range results {
+		if testName == j.Name {
+			if j.Failure == "" {
+				return true
+			}
+		}
+	}
+	return false
 }
