@@ -5,6 +5,7 @@ import (
 )
 
 func TestDateIntervalTypeValidate(t *testing.T) {
+	//: 3
 	dit := DateIntervalType("weeks")
 	got := dit.Validate()
 	if got != nil {
@@ -13,6 +14,7 @@ func TestDateIntervalTypeValidate(t *testing.T) {
 }
 
 func TestDateIntervalTypeValidateInvalid(t *testing.T) {
+	//: 3
 	dit := DateIntervalType("kittens")
 	got := dit.Validate()
 	if got == nil {
@@ -21,6 +23,7 @@ func TestDateIntervalTypeValidateInvalid(t *testing.T) {
 }
 
 func TestDateConditionValidate(t *testing.T) {
+	//: 2
 	dc := DateCondition("older_than")
 	got := dc.Validate()
 	if got != nil {
@@ -29,6 +32,7 @@ func TestDateConditionValidate(t *testing.T) {
 }
 
 func TestDateConditionValidateInvalid(t *testing.T) {
+	//: 2
 	dc := DateCondition("less_than")
 	got := dc.Validate()
 	if got == nil {

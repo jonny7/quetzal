@@ -1,2 +1,3 @@
 exclude_patterns:
   - "cmd/matrix"
+  - "*_test.go"
