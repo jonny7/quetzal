@@ -10,30 +10,10 @@ import (
 	"testing"
 )
 
-func TestConfig(t *testing.T) {
-	reader, _ := createReader("../examples/config.yaml")
-	c, err := loadConfig(reader)
-	if err != nil {
-		t.Errorf("config failed: %v", err)
-	}
-	want := "https://bot-bot.com"
-	got := c.BotServer
-	if got != want {
-		t.Errorf("config not correctly loaded, expected %s, but got: %s", want, got)
-	}
-}
-
-func TestFailedConfig(t *testing.T) {
-	_, err := createReader("invalid")
-	if err == nil {
-		t.Errorf("expected a failed config error, but got: %v", err)
-	}
-}
-
 func TestLoadPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
 	reader, _ := createReader("../examples/.policies.yaml")
@@ -51,7 +31,7 @@ func TestLoadPolicies(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	_, err := New("../examples/config.yaml", "../examples/.policies.yaml")
+	_, err := New(Config{Endpoint: "/webhook/endpoint"}, "../examples/.policies.yaml")
 	if err != nil {
 		t.Errorf("failed to init bot, %v", err)
 	}
@@ -60,7 +40,7 @@ func TestNew(t *testing.T) {
 func TestPing(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Secret: "extremely-secret", Endpoint: "/webhook-endpoint"},
 	}
 	b.routes(b.Router)
@@ -89,7 +69,7 @@ func TestPing(t *testing.T) {
 func TestPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
 	reader, _ := createReader("../examples/.policies.yaml")
@@ -115,8 +95,8 @@ func TestPolicies(t *testing.T) {
 func TestReload(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
-		Config: &Config{Endpoint: "/webhook-endpoint", policyPath: "../examples/.policies.yaml"},
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint", PolicyPath: "../examples/.policies.yaml"},
 	}
 
 	b.routes(b.Router)
@@ -140,7 +120,7 @@ func TestReload(t *testing.T) {
 func TestReloadInvalidPath(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
-		Logger: zerolog.Logger{},
+		Logger: &zerolog.Logger{},
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
 

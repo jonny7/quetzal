@@ -17,21 +17,21 @@ import (
 // Config is the user declared details provided from the yaml file
 // it contains general info for the bot along with a `Policies` property
 type Config struct {
-	User       string          `yaml:"user"`
-	Token      string          `yaml:"token"`
-	RepoHost   string          `yaml:"repoHost"`
-	BotServer  string          `yaml:"botServer"`
-	Endpoint   string          `yaml:"endpoint"`
-	Secret     string          `yaml:"secret"`
-	Port       string          `yaml:"port"`
-	policyPath string          `yaml:"policyPath"`
+	User       string
+	Token      string
+	BotServer  string
+	Endpoint   string
+	Secret     string
+	Port       string
+	PolicyPath string
+	dryRun     bool
 	Policies   []policy.Policy `yaml:"policies"`
 }
 
 // Bot struct encapsulates all behaviour of the bot
 type Bot struct {
 	Router *chi.Mux
-	Logger zerolog.Logger
+	Logger *zerolog.Logger
 	Config *Config
 }
 
@@ -90,7 +90,7 @@ func (b *Bot) policies() http.HandlerFunc {
 // reload will attempt to reload the bot's policies
 func (b *Bot) reload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reader, err := createReader(b.Config.policyPath)
+		reader, err := createReader(b.Config.PolicyPath)
 		if err != nil {
 			w.WriteHeader(500)
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("could not create reader for policy file: %v", err)})
@@ -113,31 +113,6 @@ func createReader(file string) (io.ReadCloser, error) {
 		return nil, err
 	}
 	return f, err
-}
-
-// loadConfig takes an io.ReaderCloser
-// and attempts to load it into the Config struct
-func loadConfig(reader io.ReadCloser) (*Config, error) {
-	defer func(reader io.ReadCloser) {
-		err := reader.Close()
-		if err != nil {
-			log.Error().Msg(fmt.Sprintf("the config file failed to close: %v", err))
-		}
-	}(reader)
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	var config Config
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("config file could not be read, error:%v", err))
-		return nil, err
-	}
-
-	err = yaml.Unmarshal(body, &config)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("config file could not be unmarshalled, error:%v", err))
-		return nil, err
-	}
-	return &config, nil
 }
 
 // loadPolicies loads the specified policies.yml file
@@ -168,29 +143,23 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 // validatePolicies validates all the policies and fields where only certain values are allowed
 func (b *Bot) validatePolicies() error {
 	for i, p := range b.Config.Policies {
-		if err := p.Conditions.Date.Attribute.Validate(); err != nil {
-			return fmt.Errorf("policy number %d, name: %s failed validation: %v", i+1, p.Name, err)
+		if p.Conditions.Date != (policy.Date{}) {
+			if err := p.Conditions.Date.Attribute.Validate(); err != nil {
+				return fmt.Errorf("policy number %d, name: %s failed validation: %v", i+1, p.Name, err)
+			}
 		}
 	}
 	return nil
 }
 
 // New creates a new bot taking the config filename and path from `main`'s arguments
-func New(config, policies string) (*Bot, error) {
+func New(config Config, policies string) (*Bot, error) {
 	logger := zerolog.New(os.Stdout)
-	reader, err := createReader(config)
-	if err != nil {
-		logger.Fatal().Msg(fmt.Sprintf("an error occured creating a reader for the config file: %v", err))
-	}
-	c, err := loadConfig(reader)
-	if err != nil {
-		return nil, err
-	}
 
 	b := &Bot{
 		Router: chi.NewRouter(),
-		Logger: logger,
-		Config: c,
+		Logger: &logger,
+		Config: &config,
 	}
 
 	p, err := createReader(policies)
@@ -200,7 +169,6 @@ func New(config, policies string) (*Bot, error) {
 	if err = b.loadPolicies(p); err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
 	}
-
 	if err = b.validatePolicies(); err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("invalid policy: %v", err))
 	}
