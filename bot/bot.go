@@ -64,7 +64,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			return
 		}
 		// @todo complete this handler, omitted for small unit tests
-		_, err = webhook.handleEvent(*b.Config)
+		_, err = webhook.handleEvent(b)
 		if err != nil {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Some error occurred: %v", err)})
 			return
