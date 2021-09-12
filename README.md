@@ -65,6 +65,7 @@ A single `Policy` is declared as part of an array of the `Policies` property.
 
 #### Policy Properties
 - [Name](#policy-name)
+- [Resource](#policy-resource)
 - [Conditions](#policy-conditions)
 - Limit
 - Actions
@@ -76,6 +77,26 @@ policies:
     #...
   - name: Round robin assignee
     #...
+```
+
+#### Policy Resource
+The resource is the type of webhook this policy is for.
+The available options are:
+    
+- push 
+- tag_push 
+- issue 
+- note 
+- merge_request 
+- wiki_page 
+- pipeline 
+- build 
+- deployment 
+- default
+```yaml
+policies:
+  - name: assign MR
+    resource: merge_request
 ```
 
 #### Policy Conditions
