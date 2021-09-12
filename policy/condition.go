@@ -4,7 +4,7 @@ package policy
 // the webhook to have an action performed on it
 type Condition struct {
 	// Date is a struct to manage date related entries
-	Date Date `yaml:"date,omitempty"`
+	Date *Date `yaml:"date,omitempty"`
 	// State is the state of the webhook issue
 	State string `yaml:"state,omitempty"`
 	// Milestone is the milestone of the issue
@@ -14,5 +14,5 @@ type Condition struct {
 	// ForbiddenLabels is an array of labels to not trigger the condition
 	ForbiddenLabels []string `yaml:"forbiddenLabels,omitempty"`
 	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
-	Discussion Discussion `yaml:"discussion,omitempty"`
+	Discussion *Discussion `yaml:"discussion,omitempty"`
 }

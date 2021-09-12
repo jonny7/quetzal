@@ -40,8 +40,13 @@ func decodeWebhook(body io.Reader) (*Webhook, error) {
 }
 
 func (w *Webhook) handleEvent(bot *Bot) (interface{}, error) {
+	matchedPolicies := bot.triggeredPolicies()
+	if len(matchedPolicies) < 1 {
+		bot.Logger.Info().Msg(fmt.Sprintf("no policies matched for this event: %v", w))
+		return nil, nil
+	}
 	if bot.Config.dryRun {
-		bot.Logger.Info().Msg(fmt.Sprintf("dry-run is true: so returning policies: %v", bot.Config.Policies))
+		bot.Logger.Info().Msg(fmt.Sprintf("dry-run is true: so returning policies: %v", matchedPolicies))
 		return nil, nil
 	}
 	return nil, nil

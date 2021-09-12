@@ -143,13 +143,19 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 // validatePolicies validates all the policies and fields where only certain values are allowed
 func (b *Bot) validatePolicies() error {
 	for i, p := range b.Config.Policies {
-		if p.Conditions.Date != (policy.Date{}) {
+		if p.Conditions.Date != nil {
 			if err := p.Conditions.Date.Attribute.Validate(); err != nil {
 				return fmt.Errorf("policy number %d, name: %s failed validation: %v", i+1, p.Name, err)
 			}
 		}
 	}
 	return nil
+}
+
+// triggeredPolicies are the policies that the current webhook meets
+// meaning it should be returned for processing
+func (b *Bot) triggeredPolicies() []policy.Policy {
+	return b.Config.Policies
 }
 
 // New creates a new bot taking the config filename and path from `main`'s arguments
