@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 )
 
@@ -38,6 +39,10 @@ func decodeWebhook(body io.Reader) (*Webhook, error) {
 	return &webhook, nil
 }
 
-func (w *Webhook) handleEvent(options Config) (interface{}, error) {
+func (w *Webhook) handleEvent(bot *Bot) (interface{}, error) {
+	if bot.Config.dryRun {
+		bot.Logger.Info().Msg(fmt.Sprintf("dry-run is true: so returning policies: %v", bot.Config.Policies))
+		return nil, nil
+	}
 	return nil, nil
 }

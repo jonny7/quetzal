@@ -1,5 +1,6 @@
 policies:
   - name: assign MR
+    resource: merge_request
     conditions:
       date:
         attribute: created_at
@@ -37,6 +38,7 @@ policies:
       comment: |
         Closing this issue, thanks for the fix {{author}}
   - name: Second thing
+    resource: note
     conditions:
       state: opened
       labels:
