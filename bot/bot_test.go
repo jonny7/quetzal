@@ -5,8 +5,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"gitlab.com/jonny7/quetzal/policy"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -135,5 +137,22 @@ func TestReloadInvalidPath(t *testing.T) {
 
 	if got != want {
 		t.Errorf("expected %d, but got: %d", want, got)
+	}
+}
+
+func TestTriggeredPolicies(t *testing.T) {
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+  - name: dummy policy`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	got := b.triggeredPolicies()
+	if got[0].Name != "dummy policy" {
+		t.Errorf("expected dummy policy returned")
 	}
 }
