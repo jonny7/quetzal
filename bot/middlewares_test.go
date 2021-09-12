@@ -11,6 +11,7 @@ import (
 var testHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 
 func TestInvalidWebhookSecret(t *testing.T) {
+	//: 5
 	srv := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -23,7 +24,7 @@ func TestInvalidWebhookSecret(t *testing.T) {
 
 	srv.webhookSecret(testHandler).ServeHTTP(w, req)
 
-	want := 400
+	want := 401
 	got := w.Code
 
 	if got != want {
@@ -32,6 +33,7 @@ func TestInvalidWebhookSecret(t *testing.T) {
 }
 
 func TestWebhookSecret(t *testing.T) {
+	//: 5
 	srv := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
