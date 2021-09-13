@@ -157,7 +157,7 @@ func (b *Bot) validatePolicies() error {
 func (b *Bot) filteredEventPolicies(eventType policy.EventType) []policy.Policy {
 	var filteredPolicies []policy.Policy
 	for _, pol := range b.Config.Policies {
-		if pol.Resource == eventType {
+		if pol.Resource.ToLower() == eventType.ToLower() {
 			filteredPolicies = append(filteredPolicies, pol)
 		}
 	}
