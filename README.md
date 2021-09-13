@@ -68,7 +68,7 @@ A single `Policy` is declared as part of an array of the `Policies` property.
 - [Resource](#policy-resource)
 - [Conditions](#policy-conditions)
 - Limit
-- Actions
+- [Actions](#policy-actions)
 
 #### Policy Name
 ```yaml
@@ -105,6 +105,7 @@ All available options are type-safe and validated, once the policies file has be
 
 
 - [Date](#date-condition)
+- [Note](#note-condition)
 
 #### Date Condition
 
@@ -127,6 +128,30 @@ An example date condition could look like this:
         interval: 10
 ```
 
+#### Note Condition
+
+The available options for `note` are:
+
+| Property      | required | options                     |
+| --------      | -------- | -------                     |
+| noteType      | no       | `Commit`, `MergeRequest`, `Issue`, `Snippet`. Leaving blank will cause action on any `Note` webhook  |
+| mentions      | no       | an array of mentioned users required to trigger action |
+| command       | no       | any command you wish to use  |
+
+The note condition allows your bot to respond to certain notes or even commands. As an example image the time a user mentions your bot with a specified command phrase.
+`@yourbot show -help`
+```yaml
+    conditions:
+      note:
+        noteType: Issue
+        mentions:
+          - botUser
+        command: show -help
+```
+
+#### Policy Actions
+
+Policy actions are what your bot performs when a webhook matching the policy pre-conditions is met.
 
 
 ### Contributions
