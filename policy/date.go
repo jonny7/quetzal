@@ -27,41 +27,53 @@ type Date struct {
 // DateAttribute is the updated or created property
 type DateAttribute string
 
+const (
+	createdAt DateAttribute = "created_at"
+	updatedAt DateAttribute = "updated_at"
+)
+
 // Validate confirms only the values created_at and updated_at were input
 func (d DateAttribute) Validate() error {
 	switch d {
-	case "created_at",
-		"updated_at":
+	case createdAt, updatedAt:
 		return nil
 	}
-	return fmt.Errorf("`date:attribute` expected value of either `created_at`, `updated_at`, But received: %v", d)
+	return fmt.Errorf("`date:attribute` expected value of either `%s`, `%s`, But received: %v", d, createdAt, updatedAt)
 }
 
 // DateCondition is the greater than or less than [date] filter
 type DateCondition string
 
+const (
+	olderThan DateCondition = "older_than"
+	newerThan DateCondition = "newer_than"
+)
+
 // Validate confirms that only older_than and newer_than are passed into the config
 func (d DateCondition) Validate() error {
 	switch d {
-	case "older_than",
-		"newer_than":
+	case olderThan, newerThan:
 		return nil
 	}
-	return fmt.Errorf("`date:condition` expected values older_than, newer_than. But received: %v", d)
+	return fmt.Errorf("`date:condition` expected values `%s`, `%s`. But received: %v", d, olderThan, newerThan)
 }
 
 // DateIntervalType is the type of available interval
 type DateIntervalType string
 
+const (
+	days   DateIntervalType = "days"
+	weeks  DateIntervalType = "weeks"
+	months DateIntervalType = "months"
+	years  DateIntervalType = "years"
+)
+
 // Validate confirms that only days, weeks, months, years
 // are passed in
 func (d DateIntervalType) Validate() error {
 	switch d {
-	case "days",
-		"weeks",
-		"months",
-		"years":
+	case days, weeks, months, years:
 		return nil
 	}
-	return fmt.Errorf("`date:intervalType` expected values days, weeks, months, years. But received: %v", d)
+	return fmt.Errorf("`date:intervalType` expected values `%s`, `%s`, `%s`, `%s`. But received: %v", d, days, weeks, months, years)
 }
