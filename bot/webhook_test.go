@@ -11,6 +11,7 @@ import (
 )
 
 func TestDecodeWebhook(t *testing.T) {
+	//: 7
 	body := strings.NewReader(`{"object_kind": "merge_request"}`)
 	got, _ := decodeWebhook(bufio.NewReader(body))
 	if got.ObjectKind != policy.MergeRequest {
@@ -37,7 +38,8 @@ func TestDryRun(t *testing.T) {
 	}
 }
 
-func TestNoTriggeredPolicies(t *testing.T) {
+func TestNoFilteredPoliciesViaWebhook(t *testing.T) {
+	//: 7
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
