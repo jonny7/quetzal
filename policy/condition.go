@@ -15,4 +15,6 @@ type Condition struct {
 	ForbiddenLabels []string `yaml:"forbiddenLabels,omitempty"`
 	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
 	Discussion *Discussion `yaml:"discussion,omitempty"`
+	// Note is the contents of a given note/comment on various different events like commit, mr, issue, code snippet
+	Note *Note `yaml:"note"`
 }

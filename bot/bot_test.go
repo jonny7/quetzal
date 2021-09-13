@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"gitlab.com/jonny7/quetzal/policy"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -17,9 +18,9 @@ func TestLoadPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	b.Config.Endpoint = "/webhook-endpoint"
+
 	reader, _ := createReader("../examples/.policies.yaml")
 	_ = b.loadPolicies(reader)
 
@@ -46,10 +47,9 @@ func TestPing(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Secret: "extremely-secret", Endpoint: "/webhook-endpoint"},
 	}
-	b.Config.Secret = "extremely-secret"
-	b.Config.Endpoint = "/webhook-endpoint"
+
 	b.routes(b.Router)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
@@ -78,9 +78,9 @@ func TestPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	b.Config.Endpoint = "/webhook-endpoint"
+
 	reader, _ := createReader("../examples/.policies.yaml")
 	err := b.loadPolicies(reader)
 
@@ -106,10 +106,8 @@ func TestReload(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint", PolicyPath: "../examples/.policies.yaml"},
 	}
-	b.Config.Endpoint = "/webhook-endpoint"
-	b.Config.PolicyPath = "../examples/.policies.yaml"
 
 	b.routes(b.Router)
 	w := httptest.NewRecorder()
@@ -134,10 +132,8 @@ func TestReloadInvalidPath(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint", PolicyPath: "./invalid/.policies.yaml"},
 	}
-	b.Config.PolicyPath = "./invalid/.policies.yaml"
-	b.Config.Endpoint = "/webhook-endpoint"
 
 	b.routes(b.Router)
 	w := httptest.NewRecorder()
@@ -158,9 +154,9 @@ func TestFilteredEventPolicies(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	b.Config.Endpoint = "/webhook-endpoint"
+
 	p := `policies:
   - name: dummy policy
     resource: issue`
@@ -179,9 +175,9 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
-		Config: &Config{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
-	b.Config.Endpoint = "/webhook-endpoint"
+
 	p := `policies:
   - name: assign MR
     resource: merge_request
@@ -193,5 +189,33 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
 	err = b.validatePolicies()
 	if err == nil {
 		t.Errorf("expected an error here as `not_a_valid_input` is not valid")
+	}
+}
+
+func TestNoteConditionParsed(t *testing.T) {
+	//: 12,7
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+  - name: show bot options
+    resource: Note
+    conditions:
+      note:
+        noteType: Issue
+        mentions:
+          - botuser
+        command: show -help`
+	err := b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	got := b.filteredEventPolicies(policy.Comment)
+	if len(got) != 1 {
+		t.Errorf("expected the 1 policy to be returned")
 	}
 }
