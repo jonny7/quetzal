@@ -24,7 +24,7 @@ func decodeWebhook(body io.Reader) (*Webhook, error) {
 }
 
 func (w *Webhook) handleEvent(bot *Bot) (interface{}, error) {
-	matchedPolicies := bot.triggeredPolicies()
+	matchedPolicies := bot.filteredEventPolicies(w.ObjectKind)
 	if len(matchedPolicies) < 1 {
 		bot.Logger.Info().Msg(fmt.Sprintf("no policies matched for this event: %v", w))
 		return nil, nil
