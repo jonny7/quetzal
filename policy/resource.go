@@ -1,6 +1,9 @@
 package policy
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // EventType represents a GitLab Webhook type as string
 type EventType string
@@ -26,4 +29,8 @@ func (e EventType) Validate() error {
 		return nil
 	}
 	return fmt.Errorf("the inputted EventType is invalid: %s", e)
+}
+
+func (e EventType) ToLower() string {
+	return strings.ToLower(string(e))
 }
