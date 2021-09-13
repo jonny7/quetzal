@@ -1,2 +1,2 @@
 ignore:
-  - "cmd/matrix"
+  - "internal/cmd/matrix"

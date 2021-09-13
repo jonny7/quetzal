@@ -24,7 +24,7 @@ type Config struct {
 	Secret     string
 	Port       string
 	PolicyPath string
-	dryRun     bool
+	DryRun     bool
 	Policies   []policy.Policy `yaml:"policies"`
 }
 
