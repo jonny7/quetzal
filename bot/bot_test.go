@@ -156,3 +156,25 @@ func TestTriggeredPolicies(t *testing.T) {
 		t.Errorf("expected dummy policy returned")
 	}
 }
+
+func TestValidatePoliciesDateProperties(t *testing.T) {
+	//: 1
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+  - name: assign MR
+    resource: merge_request
+    conditions:
+      date:
+        attribute: not_a_valid_input`
+	err := b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	err = b.validatePolicies()
+	if err == nil {
+		t.Errorf("expected an error here as `not_a_valid_input` is not valid")
+	}
+}
