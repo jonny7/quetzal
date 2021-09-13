@@ -152,10 +152,16 @@ func (b *Bot) validatePolicies() error {
 	return nil
 }
 
-// triggeredPolicies are the policies that the current webhook meets
-// meaning it should be returned for processing
-func (b *Bot) triggeredPolicies() []policy.Policy {
-	return b.Config.Policies
+// filteredEventPolicies returns a slice of policies for the webhook sent
+// for use in further matching
+func (b *Bot) filteredEventPolicies(eventType policy.EventType) []policy.Policy {
+	var filteredPolicies []policy.Policy
+	for _, pol := range b.Config.Policies {
+		if pol.Resource == eventType {
+			filteredPolicies = append(filteredPolicies, pol)
+		}
+	}
+	return filteredPolicies
 }
 
 // New creates a new bot taking the config filename and path from `main`'s arguments
