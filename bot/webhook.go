@@ -1,37 +1,46 @@
 package bot
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/xanzy/go-gitlab"
 	"gitlab.com/jonny7/quetzal/policy"
-	"io"
 )
 
-// Webhook is a minimal representation of GitLab's webhook
-// it simply decodes in a type-safe way the event type
 type Webhook struct {
-	ObjectKind policy.EventType `json:"object_kind"`
+	eventType gitlab.EventType
+	event     interface{}
 }
 
-// decodeWebhook decodes webhook from Gitlab
-func decodeWebhook(body io.Reader) (*Webhook, error) {
-	var webhook Webhook
-	err := json.NewDecoder(body).Decode(&webhook)
-	if err != nil {
-		return nil, err
-	}
-	return &webhook, nil
-}
+// filterAdditionalEventType will further filter down the policies if there are additional sub-types
+// the main example would be note events, which have 4 sub-types
+func (w *Webhook) filterAdditionalEventType(policySubset []policy.Policy) ([]policy.Policy, []error) {
+	var policies []policy.Policy
+	var errors []error
+	for _, p := range policySubset {
+		switch w.event.(type) {
+		case gitlab.CommitCommentEvent:
+			cce, ok := w.event.(gitlab.CommitCommentEvent)
+			if !ok {
+				errors = append(errors, fmt.Errorf("type assertion for event %v of type %s failed", w.event, w.eventType))
+				break
+			}
+			if p.Conditions.Note.Type == nil || p.Conditions.Note.Type.ToString() == cce.ObjectAttributes.NoteableType {
+				policies = append(policies, p)
+			}
+		case gitlab.IssueCommentEvent:
+			ice, ok := w.event.(gitlab.IssueCommentEvent)
+			if !ok {
+				errors = append(errors, fmt.Errorf("type assertion for event %v of type %s failed", w.event, w.eventType))
+				break
+			}
 
-func (w *Webhook) handleEvent(bot *Bot) (interface{}, error) {
-	matchedPolicies := bot.filteredEventPolicies(w.ObjectKind)
-	if len(matchedPolicies) < 1 {
-		bot.Logger.Info().Msg(fmt.Sprintf("no policies matched for this event: %v", w))
-		return nil, nil
+			if p.Conditions.Note.Type == nil || p.Conditions.Note.Type.ToString() == ice.ObjectAttributes.NoteableType {
+				policies = append(policies, p)
+			}
+		default:
+			policies = append(policies, p)
+		}
 	}
-	if bot.Config.DryRun {
-		bot.Logger.Info().Msg(fmt.Sprintf("dry-run is true: so returning policies: %v", matchedPolicies))
-		return nil, nil
-	}
-	return nil, nil
+
+	return policies, errors
 }

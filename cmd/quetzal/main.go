@@ -18,10 +18,10 @@ func main() {
 	flag.StringVar(&token, "token", "notareatoken", "The personal access token for the stated user")
 	flag.StringVar(&botServer, "bot-server", "https://bot-bot.com", "The base URL the bot lives on")
 	flag.StringVar(&endpoint, "webhook-endpoint", "/webhook/path", "The webhook endpoint")
-	flag.StringVar(&secret, "", "1234abcd", "The (optional) webhook secret ")
+	flag.StringVar(&secret, "", "", "(optional) webhook secret ")
 	flag.IntVar(&port, "port", 7838, "The port the bot listens on")
 	flag.BoolVar(&dry, "dry-run", false, "don't perform any actions, just print out the actions that would be taken if live")
-	flag.StringVar(&policies, "policies", "./.policies.yaml", "The relative path to the policies file")
+	flag.StringVar(&policies, "policies", "./examples/.policies.yaml", "The relative path to the policies file")
 	flag.BoolVar(&version, "version", false, "display version of quetzal")
 	flag.Parse()
 
