@@ -15,17 +15,25 @@ const (
 type Note struct {
 	// Type is the NoteType of the note from GitLab. If you need to narrow down
 	// the type of note then use this, if left blank, then it will apply to all note types
-	Type NoteType `yaml:"noteType"`
+	Type *NoteType `yaml:"noteType"`
 	// Mentions looks for user's mentioned in the note
 	Mentions []string `yaml:"mentions"`
 	// Command is the specified string to look for if needed.
 	Command string `yaml:"command"`
 }
 
+// Validate confirms that the user provided NoteType is of an expected type
 func (n NoteType) Validate() error {
 	switch n {
-	case NoteCommit, NoteMergeRequest, NoteIssue, NoteSnippet:
+	case NoteCommit, NoteIssue:
 		return nil
+	case NoteMergeRequest, NoteSnippet:
+		return fmt.Errorf("MergeRequest and Snippet notes are not current supported")
 	}
+
 	return fmt.Errorf("the provided NoteType of %s is invalid", n)
+}
+
+func (n NoteType) ToString() string {
+	return string(n)
 }

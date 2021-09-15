@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
+	"github.com/xanzy/go-gitlab"
 	"gitlab.com/jonny7/quetzal/policy"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -81,8 +81,12 @@ func TestPolicies(t *testing.T) {
 		Config: &Config{Endpoint: "/webhook-endpoint"},
 	}
 
-	reader, _ := createReader("../examples/.policies.yaml")
-	err := b.loadPolicies(reader)
+	p := `policies:
+  - name: dummy policy
+    resource: issue
+  - name: respond to mention
+    resource: Note`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
 	b.routes(b.Router)
 	w := httptest.NewRecorder()
@@ -91,7 +95,7 @@ func TestPolicies(t *testing.T) {
 	b.ServeHTTP(w, req)
 
 	var msg []policy.Policy
-	err = json.NewDecoder(w.Body).Decode(&msg)
+	err := json.NewDecoder(w.Body).Decode(&msg)
 	if err != nil {
 		t.Errorf("response couldn't be decoded: %v", err)
 	}
@@ -158,13 +162,11 @@ func TestFilteredEventPolicies(t *testing.T) {
 	}
 
 	p := `policies:
-  - name: dummy policy
-    resource: issue`
+ - name: dummy policy
+   resource: Issue Hook`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	w := Webhook{ObjectKind: policy.Issue}
-
-	got := b.filteredEventPolicies(w.ObjectKind)
+	got := b.filterPoliciesByEventType(gitlab.EventTypeIssue)
 	if got[0].Name != "dummy policy" {
 		t.Errorf("expected dummy policy returned")
 	}
@@ -184,9 +186,9 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
     conditions:
       date:
         attribute: not_a_valid_input`
-	err := b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	err = b.validatePolicies()
+	err := b.validatePolicies()
 	if err == nil {
 		t.Errorf("expected an error here as `not_a_valid_input` is not valid")
 	}
@@ -201,21 +203,137 @@ func TestNoteConditionParsed(t *testing.T) {
 	}
 
 	p := `policies:
-  - name: show bot options
-    resource: Note
-    conditions:
-      note:
-        noteType: Issue
-        mentions:
-          - botuser
-        command: show -help`
-	err := b.loadPolicies(io.NopCloser(strings.NewReader(p)))
-	if err != nil {
-		log.Fatal(err)
-	}
+ - name: show bot options
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Issue
+       mentions:
+         - botuser
+       command: show -help`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	got := b.filteredEventPolicies(policy.Comment)
+	got := b.filterPoliciesByEventType(gitlab.EventTypeNote)
 	if len(got) != 1 {
 		t.Errorf("expected the 1 policy to be returned")
+	}
+}
+
+func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
+	//: 12,7, 13, 14
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+ - name: show bot options
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Issue
+       mentions:
+         - botuser
+       command: show -help
+ - name: some other action
+   resource: Note Hook
+   conditions:
+     note:
+       mentions:
+         - botuser
+       command: show -help`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	webhook := Webhook{
+		eventType: gitlab.EventTypeNote,
+		event: gitlab.IssueCommentEvent{
+			ObjectAttributes: struct {
+				ID           int            `json:"id"`
+				Note         string         `json:"note"`
+				NoteableType string         `json:"noteable_type"`
+				AuthorID     int            `json:"author_id"`
+				CreatedAt    string         `json:"created_at"`
+				UpdatedAt    string         `json:"updated_at"`
+				ProjectID    int            `json:"project_id"`
+				Attachment   string         `json:"attachment"`
+				LineCode     string         `json:"line_code"`
+				CommitID     string         `json:"commit_id"`
+				NoteableID   int            `json:"noteable_id"`
+				System       bool           `json:"system"`
+				StDiff       []*gitlab.Diff `json:"st_diff"`
+				URL          string         `json:"url"`
+			}{NoteableType: "Issue"},
+		},
+	}
+
+	policies := b.filterPoliciesByEventType(gitlab.EventTypeNote)
+	got, _ := webhook.filterAdditionalEventType(policies)
+
+	if len(got) != 2 {
+		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+	}
+}
+
+func TestNoteConditionNoteTypeFiltered(t *testing.T) {
+	//: 12,7, 13, 14
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+ - name: show bot options
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Issue
+       mentions:
+         - botuser
+       command: show -help
+ - name: some other action
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Commit
+       mentions:
+         - botuser
+       command: show -help`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+	webhook := Webhook{
+		eventType: gitlab.EventTypeNote,
+		event: gitlab.CommitCommentEvent{
+			ObjectAttributes: struct {
+				ID           int    `json:"id"`
+				Note         string `json:"note"`
+				NoteableType string `json:"noteable_type"`
+				AuthorID     int    `json:"author_id"`
+				CreatedAt    string `json:"created_at"`
+				UpdatedAt    string `json:"updated_at"`
+				ProjectID    int    `json:"project_id"`
+				Attachment   string `json:"attachment"`
+				LineCode     string `json:"line_code"`
+				CommitID     string `json:"commit_id"`
+				NoteableID   int    `json:"noteable_id"`
+				System       bool   `json:"system"`
+				StDiff       struct {
+					Diff        string `json:"diff"`
+					NewPath     string `json:"new_path"`
+					OldPath     string `json:"old_path"`
+					AMode       string `json:"a_mode"`
+					BMode       string `json:"b_mode"`
+					NewFile     bool   `json:"new_file"`
+					RenamedFile bool   `json:"renamed_file"`
+					DeletedFile bool   `json:"deleted_file"`
+				} `json:"st_diff"`
+			}{NoteableType: "Commit"},
+		},
+	}
+	policies := b.filterPoliciesByEventType(gitlab.EventTypeNote)
+	got, _ := webhook.filterAdditionalEventType(policies)
+
+	if len(got) != 1 {
+		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
 	}
 }
