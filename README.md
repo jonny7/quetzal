@@ -134,7 +134,7 @@ The available options for `note` are:
 
 | Property      | required | options                     |
 | --------      | -------- | -------                     |
-| noteType      | no       | `Commit`, `MergeRequest`, `Issue`, `Snippet`. Leaving blank will cause action on any `Note` webhook  |
+| noteType      | no       | `Commit`, `Issue`. Leaving blank will cause action on any `Note` webhook. **nb** `MergeRequest` and `Snippet` are not supported  |
 | mentions      | no       | an array of mentioned users required to trigger action |
 | command       | no       | any command you wish to use  |
 

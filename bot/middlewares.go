@@ -11,6 +11,7 @@ func (b *Bot) webhookSecret(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Gitlab-Token") == "" {
 			next.ServeHTTP(w, r)
+			return
 		}
 		if r.Header.Get("X-Gitlab-Token") != b.Config.Secret {
 			w.WriteHeader(401)

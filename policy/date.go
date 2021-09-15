@@ -2,12 +2,12 @@ package policy
 
 import "fmt"
 
-// Validate provides a method to validate a struct
+// Validator provides a method to validate a struct
 // created from a yaml config file, most types
 // are backed by strings, which means that value can
 // be passed in the .yml file. Validate confirms these are
 // permitted values
-type Validate interface {
+type Validator interface {
 	Validate() error
 }
 

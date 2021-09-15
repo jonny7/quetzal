@@ -3,9 +3,11 @@ package bot
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/xanzy/go-gitlab"
 	"gitlab.com/jonny7/quetzal/policy"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -54,32 +56,6 @@ func (b *Bot) routes(r *chi.Mux) {
 	r.Post("/reload", b.reload())
 }
 
-// processWebhook is the main endpoint for this bot
-// and bridges user specified plugins and the gitlab webhook
-func (b *Bot) processWebhook() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		webhook, err := decodeWebhook(r.Body)
-		if err != nil {
-			render.Respond(w, r, Message{Msg: fmt.Sprintf("Could not decode webhook: %v", err)})
-			return
-		}
-		// @todo complete this handler, omitted for small unit tests
-		_, err = webhook.handleEvent(b)
-		if err != nil {
-			render.Respond(w, r, Message{Msg: fmt.Sprintf("Some error occurred: %v", err)})
-			return
-		}
-		render.Respond(w, r, nil)
-	}
-}
-
-// ping just provides a simple bot health endpoint
-func (b *Bot) ping() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		render.Respond(w, r, Message{Msg: "pong"})
-	}
-}
-
 // policies endpoint returns all the loaded policies for the bot
 func (b *Bot) policies() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +80,51 @@ func (b *Bot) reload() http.HandlerFunc {
 		}
 		render.Respond(w, r, Message{Msg: "policies reloaded"})
 	}
+}
+
+// ping just provides a simple bot health endpoint
+func (b *Bot) ping() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.Respond(w, r, Message{Msg: "pong"})
+	}
+}
+
+// processWebhook is the main endpoint for this bot
+// and bridges user specified plugins and the gitlab webhook
+func (b *Bot) processWebhook() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		payload, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(500)
+			render.Respond(w, r, nil)
+			return
+		}
+		eventType := gitlab.HookEventType(r)
+		event, err := gitlab.ParseWebhook(eventType, payload)
+		if err != nil {
+			render.Respond(w, r, Message{Msg: fmt.Sprintf("Could not decode webhook: %v", err)})
+			return
+		}
+		webhook := Webhook{
+			eventType: eventType,
+			event:     event,
+		}
+		filteredPolicies := b.filterPoliciesByEventType(eventType)
+		eventPolicies, errors := webhook.filterAdditionalEventType(filteredPolicies)
+		fmt.Println(webhook, eventPolicies, errors)
+		render.Respond(w, r, Message{Msg: "Processed"})
+	}
+}
+
+// filterPoliciesByEventType filters each policy by the webhook event
+func (b *Bot) filterPoliciesByEventType(event gitlab.EventType) []policy.Policy {
+	var filteredPolicies []policy.Policy
+	for _, pol := range b.Config.Policies {
+		if pol.Resource == event {
+			filteredPolicies = append(filteredPolicies, pol)
+		}
+	}
+	return filteredPolicies
 }
 
 // createReader takes a file location and returns an io.ReaderCloser
@@ -152,18 +173,6 @@ func (b *Bot) validatePolicies() error {
 	return nil
 }
 
-// filteredEventPolicies returns a slice of policies for the webhook sent
-// for use in further matching
-func (b *Bot) filteredEventPolicies(eventType policy.EventType) []policy.Policy {
-	var filteredPolicies []policy.Policy
-	for _, pol := range b.Config.Policies {
-		if pol.Resource.ToLower() == eventType.ToLower() {
-			filteredPolicies = append(filteredPolicies, pol)
-		}
-	}
-	return filteredPolicies
-}
-
 // New creates a new bot taking the config filename and path from `main`'s arguments
 func New(config Config, policies string) (*Bot, error) {
 	logger := zerolog.New(os.Stdout)
@@ -186,6 +195,7 @@ func New(config Config, policies string) (*Bot, error) {
 	}
 
 	b.Router.Use(render.SetContentType(render.ContentTypeJSON))
+	b.Router.Use(middleware.Recoverer)
 	b.routes(b.Router)
 	return b, nil
 }
