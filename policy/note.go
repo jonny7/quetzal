@@ -37,3 +37,15 @@ func (n NoteType) Validate() error {
 func (n NoteType) ToString() string {
 	return string(n)
 }
+
+//
+//func (n *Note) ConditionMet() bool {
+//	return true
+//}
+//
+//func (n *Note) ConditionType() bool {
+//	if n.Type == nil {
+//		return true
+//	}
+//	if n.Type.ToString()
+//}
