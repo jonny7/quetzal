@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
@@ -154,7 +155,7 @@ func TestReloadInvalidPath(t *testing.T) {
 }
 
 func TestFilteredEventPolicies(t *testing.T) {
-	//:7
+	//: 7
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -220,7 +221,7 @@ func TestNoteConditionParsed(t *testing.T) {
 }
 
 func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
-	//: 12,7, 13, 14
+	//: 12,7,13,14
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -267,16 +268,30 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 		},
 	}
 
-	policies := b.filterPoliciesByEventType(gitlab.EventTypeNote)
-	got, _ := webhook.filterAdditionalEventType(policies)
+	in := make(chan policy.Policy)
+	out := make(chan policy.Policy)
 
-	if len(got) != 2 {
-		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+	go webhook.filterEvent(in, out)
+
+	go func() {
+		for _, ruleSet := range b.Config.Policies {
+			in <- ruleSet
+		}
+		close(in)
+	}()
+
+	var got []policy.Policy
+	for policies := range out {
+		got = append(got, policies)
+	}
+
+	if len(got) == 1 {
+		t.Errorf("expected 2 policies to be returned, but got: %d", len(got))
 	}
 }
 
 func TestNoteConditionNoteTypeFiltered(t *testing.T) {
-	//: 12,7, 13, 14
+	//: 12,7,13,14
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -330,10 +345,217 @@ func TestNoteConditionNoteTypeFiltered(t *testing.T) {
 			}{NoteableType: "Commit"},
 		},
 	}
-	policies := b.filterPoliciesByEventType(gitlab.EventTypeNote)
-	got, _ := webhook.filterAdditionalEventType(policies)
+
+	in := make(chan policy.Policy)
+	out := make(chan policy.Policy)
+
+	go webhook.filterEvent(in, out)
+
+	go func() {
+		for _, ruleSet := range b.Config.Policies {
+			in <- ruleSet
+		}
+		close(in)
+	}()
+
+	var got []policy.Policy
+	for policies := range out {
+		got = append(got, policies)
+	}
 
 	if len(got) != 1 {
 		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+	}
+}
+
+func TestFilterAdditionalType(t *testing.T) {
+	//: 12,7,13,14
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+ - name: show bot options
+   resource: Issue Hook
+   conditions:
+     state: opened
+ - name: some other action
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Commit
+       mentions:
+         - botuser
+       command: show -help`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+	webhook := Webhook{
+		eventType: gitlab.EventTypeNote,
+		event: gitlab.CommitCommentEvent{
+			ObjectAttributes: struct {
+				ID           int    `json:"id"`
+				Note         string `json:"note"`
+				NoteableType string `json:"noteable_type"`
+				AuthorID     int    `json:"author_id"`
+				CreatedAt    string `json:"created_at"`
+				UpdatedAt    string `json:"updated_at"`
+				ProjectID    int    `json:"project_id"`
+				Attachment   string `json:"attachment"`
+				LineCode     string `json:"line_code"`
+				CommitID     string `json:"commit_id"`
+				NoteableID   int    `json:"noteable_id"`
+				System       bool   `json:"system"`
+				StDiff       struct {
+					Diff        string `json:"diff"`
+					NewPath     string `json:"new_path"`
+					OldPath     string `json:"old_path"`
+					AMode       string `json:"a_mode"`
+					BMode       string `json:"b_mode"`
+					NewFile     bool   `json:"new_file"`
+					RenamedFile bool   `json:"renamed_file"`
+					DeletedFile bool   `json:"deleted_file"`
+				} `json:"st_diff"`
+			}{NoteableType: "Commit"},
+		},
+	}
+
+	in := make(chan policy.Policy)
+	out := make(chan policy.Policy)
+
+	go webhook.filterEvent(in, out)
+
+	go func() {
+		for _, ruleSet := range b.Config.Policies {
+			in <- ruleSet
+		}
+		close(in)
+	}()
+
+	var got []policy.Policy
+	for policies := range out {
+		got = append(got, policies)
+	}
+
+	if len(got) != 1 {
+		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+	}
+}
+
+func TestProcessWebhookNoErrors(t *testing.T) {
+	//:
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+ - name: show bot options
+   resource: Issue Hook
+   conditions:
+     state: opened
+ - name: some other action
+   resource: Note Hook
+   conditions:
+     note:
+       noteType: Commit
+       mentions:
+         - botuser
+       command: show -help`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	b.routes(b.Router)
+	w := httptest.NewRecorder()
+	payload := `{
+  "object_kind": "note",
+  "user": {
+    "id": 1,
+    "name": "Administrator",
+    "username": "root",
+    "avatar_url": "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40\u0026d=identicon",
+    "email": "admin@example.com"
+  },
+  "project_id": 5,
+  "project":{
+    "id": 5,
+    "name":"Gitlab Test",
+    "description":"Aut reprehenderit ut est.",
+    "web_url":"http://example.com/gitlabhq/gitlab-test",
+    "avatar_url":null,
+    "git_ssh_url":"git@example.com:gitlabhq/gitlab-test.git",
+    "git_http_url":"http://example.com/gitlabhq/gitlab-test.git",
+    "namespace":"GitlabHQ",
+    "visibility_level":20,
+    "path_with_namespace":"gitlabhq/gitlab-test",
+    "default_branch":"master",
+    "homepage":"http://example.com/gitlabhq/gitlab-test",
+    "url":"http://example.com/gitlabhq/gitlab-test.git",
+    "ssh_url":"git@example.com:gitlabhq/gitlab-test.git",
+    "http_url":"http://example.com/gitlabhq/gitlab-test.git"
+  },
+  "repository":{
+    "name": "Gitlab Test",
+    "url": "http://example.com/gitlab-org/gitlab-test.git",
+    "description": "Aut reprehenderit ut est.",
+    "homepage": "http://example.com/gitlab-org/gitlab-test"
+  },
+  "object_attributes": {
+    "id": 1243,
+    "note": "This is a commit comment. How does this work?",
+    "noteable_type": "Commit",
+    "author_id": 1,
+    "created_at": "2015-05-17 18:08:09 UTC",
+    "updated_at": "2015-05-17 18:08:09 UTC",
+    "project_id": 5,
+    "attachment":null,
+    "line_code": "bec9703f7a456cd2b4ab5fb3220ae016e3e394e3_0_1",
+    "commit_id": "cfe32cf61b73a0d5e9f13e774abde7ff789b1660",
+    "noteable_id": null,
+    "system": false,
+    "st_diff": {
+      "diff": "--- /dev/null\n+++ b/six\n@@ -0,0 +1 @@\n+Subproject commit 409f37c4f05865e4fb208c771485f211a22c4c2d\n",
+      "new_path": "six",
+      "old_path": "six",
+      "a_mode": "0",
+      "b_mode": "160000",
+      "new_file": true,
+      "renamed_file": false,
+      "deleted_file": false
+    },
+    "url": "http://example.com/gitlab-org/gitlab-test/commit/cfe32cf61b73a0d5e9f13e774abde7ff789b1660#note_1243"
+  },
+  "commit": {
+    "id": "cfe32cf61b73a0d5e9f13e774abde7ff789b1660",
+    "message": "Add submodule\n\nSigned-off-by: Example User \u003cuser@example.com.com\u003e\n",
+    "timestamp": "2014-02-27T10:06:20+02:00",
+    "url": "http://example.com/gitlab-org/gitlab-test/commit/cfe32cf61b73a0d5e9f13e774abde7ff789b1660",
+    "author": {
+      "name": "Example User",
+      "email": "user@example.com"
+    }
+  }
+}`
+	req, _ := http.NewRequest(http.MethodPost, "/webhook-endpoint", bytes.NewBuffer([]byte(payload)))
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("X-Gitlab-Event", "Note Hook")
+
+	b.ServeHTTP(w, req)
+
+	want := 200
+	got := w.Code
+
+	if got != want {
+		t.Errorf("expected %d, but got: %d", want, got)
+	}
+	var returnedPolicies []policy.Policy
+
+	err := json.NewDecoder(w.Body).Decode(&returnedPolicies)
+	if err != nil {
+		t.Errorf("response couldn't be decoded: %v", err)
+	}
+
+	if len(returnedPolicies) != 1 {
+		t.Errorf("expected 1 policy to be returned, but got: %d", len(returnedPolicies))
 	}
 }
