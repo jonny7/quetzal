@@ -17,7 +17,7 @@ func main() {
 	flag.StringVar(&user, "user", "username@gitlab.com", "The Gitlab user this bot will act as")
 	flag.StringVar(&token, "token", "notareatoken", "The personal access token for the stated user")
 	flag.StringVar(&botServer, "bot-server", "https://bot-bot.com", "The base URL the bot lives on")
-	flag.StringVar(&endpoint, "webhook-endpoint", "/webhook/path", "The webhook endpoint")
+	flag.StringVar(&endpoint, "webhook-endpoint", "/webhook-endpoint", "The webhook endpoint")
 	flag.StringVar(&secret, "", "", "(optional) webhook secret ")
 	flag.IntVar(&port, "port", 7838, "The port the bot listens on")
 	flag.BoolVar(&dry, "dry-run", false, "don't perform any actions, just print out the actions that would be taken if live")

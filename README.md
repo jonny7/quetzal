@@ -35,7 +35,7 @@ Usage of ./quetzal:
   -version
         display version of quetzal
   -webhook-endpoint string
-        The webhook endpoint (default "/webhook/path")
+        The webhook endpoint (default "/webhook-endpoint")
   -webhook-secret string
         The (optional) webhook secret  (default "1234abcd")
 ```

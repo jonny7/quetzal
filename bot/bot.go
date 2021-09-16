@@ -109,10 +109,23 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			eventType: eventType,
 			event:     event,
 		}
-		filteredPolicies := b.filterPoliciesByEventType(eventType)
-		eventPolicies, errors := webhook.filterAdditionalEventType(filteredPolicies)
-		fmt.Println(webhook, eventPolicies, errors)
-		render.Respond(w, r, Message{Msg: "Processed"})
+		in := make(chan policy.Policy)
+		out := make(chan policy.Policy)
+
+		go webhook.filterEvent(in, out)
+
+		go func() {
+			for _, ruleSet := range b.Config.Policies {
+				in <- ruleSet
+			}
+			close(in)
+		}()
+		var answer []policy.Policy
+		for q := range out {
+			answer = append(answer, q)
+		}
+
+		render.Respond(w, r, answer)
 	}
 }
 
