@@ -220,229 +220,229 @@ func TestNoteConditionParsed(t *testing.T) {
 	}
 }
 
-func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
-	//: 12,7,13,14
-	b := Bot{
-		Router: chi.NewRouter(),
-		Logger: &zerolog.Logger{},
-		Config: &Config{Endpoint: "/webhook-endpoint"},
-	}
+//func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
+//	//: 12,7,13,14
+//	b := Bot{
+//		Router: chi.NewRouter(),
+//		Logger: &zerolog.Logger{},
+//		Config: &Config{Endpoint: "/webhook-endpoint"},
+//	}
+//
+//	p := `policies:
+// - name: show bot options
+//   resource: Note Hook
+//   conditions:
+//     note:
+//       noteType: Issue
+//       mentions:
+//         - botuser
+//       command: show -help
+// - name: some other action
+//   resource: Note Hook
+//   conditions:
+//     note:
+//       mentions:
+//         - botuser
+//       command: show -help`
+//	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+//
+//	webhook := Webhook{
+//		eventType: gitlab.EventTypeNote,
+//		event: gitlab.IssueCommentEvent{
+//			ObjectAttributes: struct {
+//				ID           int            `json:"id"`
+//				Note         string         `json:"note"`
+//				NoteableType string         `json:"noteable_type"`
+//				AuthorID     int            `json:"author_id"`
+//				CreatedAt    string         `json:"created_at"`
+//				UpdatedAt    string         `json:"updated_at"`
+//				ProjectID    int            `json:"project_id"`
+//				Attachment   string         `json:"attachment"`
+//				LineCode     string         `json:"line_code"`
+//				CommitID     string         `json:"commit_id"`
+//				NoteableID   int            `json:"noteable_id"`
+//				System       bool           `json:"system"`
+//				StDiff       []*gitlab.Diff `json:"st_diff"`
+//				URL          string         `json:"url"`
+//			}{NoteableType: "Issue"},
+//		},
+//	}
+//
+//	in := make(chan policy.Policy)
+//	out := make(chan policy.Policy)
+//
+//	go webhook.filterEvent(in, out)
+//
+//	go func() {
+//		for _, ruleSet := range b.Config.Policies {
+//			in <- ruleSet
+//		}
+//		close(in)
+//	}()
+//
+//	var got []policy.Policy
+//	for policies := range out {
+//		got = append(got, policies)
+//	}
+//
+//	if len(got) == 1 {
+//		t.Errorf("expected 2 policies to be returned, but got: %d", len(got))
+//	}
+//}
+//
+//func TestNoteConditionNoteTypeFiltered(t *testing.T) {
+//	//: 12,7,13,14
+//	b := Bot{
+//		Router: chi.NewRouter(),
+//		Logger: &zerolog.Logger{},
+//		Config: &Config{Endpoint: "/webhook-endpoint"},
+//	}
+//
+//	p := `policies:
+// - name: show bot options
+//   resource: Note Hook
+//   conditions:
+//     note:
+//       noteType: Issue
+//       mentions:
+//         - botuser
+//       command: show -help
+// - name: some other action
+//   resource: Note Hook
+//   conditions:
+//     note:
+//       noteType: Commit
+//       mentions:
+//         - botuser
+//       command: show -help`
+//	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+//	webhook := Webhook{
+//		eventType: gitlab.EventTypeNote,
+//		event: gitlab.CommitCommentEvent{
+//			ObjectAttributes: struct {
+//				ID           int    `json:"id"`
+//				Note         string `json:"note"`
+//				NoteableType string `json:"noteable_type"`
+//				AuthorID     int    `json:"author_id"`
+//				CreatedAt    string `json:"created_at"`
+//				UpdatedAt    string `json:"updated_at"`
+//				ProjectID    int    `json:"project_id"`
+//				Attachment   string `json:"attachment"`
+//				LineCode     string `json:"line_code"`
+//				CommitID     string `json:"commit_id"`
+//				NoteableID   int    `json:"noteable_id"`
+//				System       bool   `json:"system"`
+//				StDiff       struct {
+//					Diff        string `json:"diff"`
+//					NewPath     string `json:"new_path"`
+//					OldPath     string `json:"old_path"`
+//					AMode       string `json:"a_mode"`
+//					BMode       string `json:"b_mode"`
+//					NewFile     bool   `json:"new_file"`
+//					RenamedFile bool   `json:"renamed_file"`
+//					DeletedFile bool   `json:"deleted_file"`
+//				} `json:"st_diff"`
+//			}{NoteableType: "Commit"},
+//		},
+//	}
+//
+//	in := make(chan policy.Policy)
+//	out := make(chan policy.Policy)
+//
+//	go webhook.filterEvent(in, out)
+//
+//	go func() {
+//		for _, ruleSet := range b.Config.Policies {
+//			in <- ruleSet
+//		}
+//		close(in)
+//	}()
+//
+//	var got []policy.Policy
+//	for policies := range out {
+//		got = append(got, policies)
+//	}
+//
+//	if len(got) != 1 {
+//		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+//	}
+//}
+//
+//func TestFilterAdditionalType(t *testing.T) {
+//	//: 12,7,13,14
+//	b := Bot{
+//		Router: chi.NewRouter(),
+//		Logger: &zerolog.Logger{},
+//		Config: &Config{Endpoint: "/webhook-endpoint"},
+//	}
+//
+//	p := `policies:
+// - name: show bot options
+//   resource: Issue Hook
+//   conditions:
+//     state: opened
+// - name: some other action
+//   resource: Note Hook
+//   conditions:
+//     note:
+//       noteType: Commit
+//       mentions:
+//         - botuser
+//       command: show -help`
+//	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+//	webhook := Webhook{
+//		eventType: gitlab.EventTypeNote,
+//		event: gitlab.CommitCommentEvent{
+//			ObjectAttributes: struct {
+//				ID           int    `json:"id"`
+//				Note         string `json:"note"`
+//				NoteableType string `json:"noteable_type"`
+//				AuthorID     int    `json:"author_id"`
+//				CreatedAt    string `json:"created_at"`
+//				UpdatedAt    string `json:"updated_at"`
+//				ProjectID    int    `json:"project_id"`
+//				Attachment   string `json:"attachment"`
+//				LineCode     string `json:"line_code"`
+//				CommitID     string `json:"commit_id"`
+//				NoteableID   int    `json:"noteable_id"`
+//				System       bool   `json:"system"`
+//				StDiff       struct {
+//					Diff        string `json:"diff"`
+//					NewPath     string `json:"new_path"`
+//					OldPath     string `json:"old_path"`
+//					AMode       string `json:"a_mode"`
+//					BMode       string `json:"b_mode"`
+//					NewFile     bool   `json:"new_file"`
+//					RenamedFile bool   `json:"renamed_file"`
+//					DeletedFile bool   `json:"deleted_file"`
+//				} `json:"st_diff"`
+//			}{NoteableType: "Commit"},
+//		},
+//	}
+//
+//	in := make(chan policy.Policy)
+//	out := make(chan policy.Policy)
+//
+//	go webhook.filterEvent(in, out)
+//
+//	go func() {
+//		for _, ruleSet := range b.Config.Policies {
+//			in <- ruleSet
+//		}
+//		close(in)
+//	}()
+//
+//	var got []policy.Policy
+//	for policies := range out {
+//		got = append(got, policies)
+//	}
+//
+//	if len(got) != 1 {
+//		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+//	}
+//}
 
-	p := `policies:
- - name: show bot options
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Issue
-       mentions:
-         - botuser
-       command: show -help
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       mentions:
-         - botuser
-       command: show -help`
-	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
-
-	webhook := Webhook{
-		eventType: gitlab.EventTypeNote,
-		event: gitlab.IssueCommentEvent{
-			ObjectAttributes: struct {
-				ID           int            `json:"id"`
-				Note         string         `json:"note"`
-				NoteableType string         `json:"noteable_type"`
-				AuthorID     int            `json:"author_id"`
-				CreatedAt    string         `json:"created_at"`
-				UpdatedAt    string         `json:"updated_at"`
-				ProjectID    int            `json:"project_id"`
-				Attachment   string         `json:"attachment"`
-				LineCode     string         `json:"line_code"`
-				CommitID     string         `json:"commit_id"`
-				NoteableID   int            `json:"noteable_id"`
-				System       bool           `json:"system"`
-				StDiff       []*gitlab.Diff `json:"st_diff"`
-				URL          string         `json:"url"`
-			}{NoteableType: "Issue"},
-		},
-	}
-
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
-
-	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
-	}
-
-	if len(got) == 1 {
-		t.Errorf("expected 2 policies to be returned, but got: %d", len(got))
-	}
-}
-
-func TestNoteConditionNoteTypeFiltered(t *testing.T) {
-	//: 12,7,13,14
-	b := Bot{
-		Router: chi.NewRouter(),
-		Logger: &zerolog.Logger{},
-		Config: &Config{Endpoint: "/webhook-endpoint"},
-	}
-
-	p := `policies:
- - name: show bot options
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Issue
-       mentions:
-         - botuser
-       command: show -help
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Commit
-       mentions:
-         - botuser
-       command: show -help`
-	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
-	webhook := Webhook{
-		eventType: gitlab.EventTypeNote,
-		event: gitlab.CommitCommentEvent{
-			ObjectAttributes: struct {
-				ID           int    `json:"id"`
-				Note         string `json:"note"`
-				NoteableType string `json:"noteable_type"`
-				AuthorID     int    `json:"author_id"`
-				CreatedAt    string `json:"created_at"`
-				UpdatedAt    string `json:"updated_at"`
-				ProjectID    int    `json:"project_id"`
-				Attachment   string `json:"attachment"`
-				LineCode     string `json:"line_code"`
-				CommitID     string `json:"commit_id"`
-				NoteableID   int    `json:"noteable_id"`
-				System       bool   `json:"system"`
-				StDiff       struct {
-					Diff        string `json:"diff"`
-					NewPath     string `json:"new_path"`
-					OldPath     string `json:"old_path"`
-					AMode       string `json:"a_mode"`
-					BMode       string `json:"b_mode"`
-					NewFile     bool   `json:"new_file"`
-					RenamedFile bool   `json:"renamed_file"`
-					DeletedFile bool   `json:"deleted_file"`
-				} `json:"st_diff"`
-			}{NoteableType: "Commit"},
-		},
-	}
-
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
-
-	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
-	}
-
-	if len(got) != 1 {
-		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
-	}
-}
-
-func TestFilterAdditionalType(t *testing.T) {
-	//: 12,7,13,14
-	b := Bot{
-		Router: chi.NewRouter(),
-		Logger: &zerolog.Logger{},
-		Config: &Config{Endpoint: "/webhook-endpoint"},
-	}
-
-	p := `policies:
- - name: show bot options
-   resource: Issue Hook
-   conditions:
-     state: opened
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Commit
-       mentions:
-         - botuser
-       command: show -help`
-	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
-	webhook := Webhook{
-		eventType: gitlab.EventTypeNote,
-		event: gitlab.CommitCommentEvent{
-			ObjectAttributes: struct {
-				ID           int    `json:"id"`
-				Note         string `json:"note"`
-				NoteableType string `json:"noteable_type"`
-				AuthorID     int    `json:"author_id"`
-				CreatedAt    string `json:"created_at"`
-				UpdatedAt    string `json:"updated_at"`
-				ProjectID    int    `json:"project_id"`
-				Attachment   string `json:"attachment"`
-				LineCode     string `json:"line_code"`
-				CommitID     string `json:"commit_id"`
-				NoteableID   int    `json:"noteable_id"`
-				System       bool   `json:"system"`
-				StDiff       struct {
-					Diff        string `json:"diff"`
-					NewPath     string `json:"new_path"`
-					OldPath     string `json:"old_path"`
-					AMode       string `json:"a_mode"`
-					BMode       string `json:"b_mode"`
-					NewFile     bool   `json:"new_file"`
-					RenamedFile bool   `json:"renamed_file"`
-					DeletedFile bool   `json:"deleted_file"`
-				} `json:"st_diff"`
-			}{NoteableType: "Commit"},
-		},
-	}
-
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
-
-	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
-	}
-
-	if len(got) != 1 {
-		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
-	}
-}
-
-func TestProcessWebhookNoErrors(t *testing.T) {
+func TestProcessWebhookNoConcurrencyErrors(t *testing.T) {
 	//:
 	b := Bot{
 		Router: chi.NewRouter(),
