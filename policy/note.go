@@ -1,6 +1,9 @@
 package policy
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // NoteType is the type of note: Commit, MergeRequest, Issue, Snippet
 type NoteType string
@@ -20,6 +23,11 @@ type Note struct {
 	Mentions []string `yaml:"mentions"`
 	// Command is the specified string to look for if needed.
 	Command string `yaml:"command"`
+}
+
+func (n Note) ConditionsMet() bool {
+	time.Sleep(2 * time.Second)
+	return true
 }
 
 // Validate confirms that the user provided NoteType is of an expected type

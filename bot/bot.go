@@ -14,6 +14,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
+	"sync"
 )
 
 // Config is the user declared details provided from the yaml file
@@ -109,36 +111,78 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			eventType: eventType,
 			event:     event,
 		}
-		in := make(chan policy.Policy)
-		out := make(chan policy.Policy)
 
-		go webhook.filterEvent(in, out)
-
-		go func() {
-			for _, ruleSet := range b.Config.Policies {
-				in <- ruleSet
-			}
-			close(in)
-		}()
-		var answer []policy.Policy
-		for q := range out {
-			answer = append(answer, q)
+		preparedPolicies := b.preparePolicies()
+		workers := make([]<-chan policy.Policy, runtime.NumCPU())
+		for i := 0; i < runtime.NumCPU(); i++ {
+			workers[i] = webhook.filterEvent(preparedPolicies)
 		}
 
-		render.Respond(w, r, answer)
+		validPolicies := merge(workers...)
+		var p []policy.Policy
+		for v := range validPolicies {
+			p = append(p, v)
+		}
+
+		//in := make(chan policy.Policy)
+		//out := make(chan policy.Policy)
+		//
+		//go webhook.filterEvent(in, out)
+		//
+		//var answer []policy.Policy
+		//for q := range out {
+		//	answer = append(answer, q)
+		//}
+
+		render.Respond(w, r, p)
 	}
 }
 
-// filterPoliciesByEventType filters each policy by the webhook event
-func (b *Bot) filterPoliciesByEventType(event gitlab.EventType) []policy.Policy {
-	var filteredPolicies []policy.Policy
-	for _, pol := range b.Config.Policies {
-		if pol.Resource == event {
-			filteredPolicies = append(filteredPolicies, pol)
+func merge(incoming ...<-chan policy.Policy) <-chan policy.Policy {
+	var wg sync.WaitGroup
+
+	wg.Add(len(incoming))
+	outgoing := make(chan policy.Policy)
+	multiplexer := func(policies <-chan policy.Policy) {
+		defer wg.Done()
+		for p := range policies {
+			outgoing <- p
 		}
 	}
-	return filteredPolicies
+
+	for _, ch := range incoming {
+		go multiplexer(ch)
+	}
+
+	go func() {
+		wg.Wait()
+		close(outgoing)
+	}()
+
+	return outgoing
 }
+
+func (b *Bot) preparePolicies() <-chan policy.Policy {
+	out := make(chan policy.Policy)
+	go func() {
+		defer close(out)
+		for _, ruleSet := range b.Config.Policies {
+			out <- ruleSet
+		}
+	}()
+	return out
+}
+
+//// filterPoliciesByEventType filters each policy by the webhook event
+//func (b *Bot) filterPoliciesByEventType(event gitlab.EventType) []policy.Policy {
+//	var filteredPolicies []policy.Policy
+//	for _, pol := range b.Config.Policies {
+//		if pol.Resource == event {
+//			filteredPolicies = append(filteredPolicies, pol)
+//		}
+//	}
+//	return filteredPolicies
+//}
 
 // createReader takes a file location and returns an io.ReaderCloser
 func createReader(file string) (io.ReadCloser, error) {
@@ -175,6 +219,7 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 }
 
 // validatePolicies validates all the policies and fields where only certain values are allowed
+// @todo finish validations
 func (b *Bot) validatePolicies() error {
 	for i, p := range b.Config.Policies {
 		if p.Conditions.Date != nil {
