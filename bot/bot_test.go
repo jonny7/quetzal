@@ -84,9 +84,9 @@ func TestPolicies(t *testing.T) {
 
 	p := `policies:
   - name: dummy policy
-    resource: issue
+    resource: Issue Hook
   - name: respond to mention
-    resource: Note`
+    resource: Note Hook`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
 	b.routes(b.Router)
@@ -163,11 +163,18 @@ func TestFilteredEventPolicies(t *testing.T) {
 	}
 
 	p := `policies:
- - name: dummy policy
-   resource: Issue Hook`
+  - name: dummy policy
+    resource: Issue Hook`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	got := b.filterPoliciesByEventType(gitlab.EventTypeIssue)
+	webhook := Webhook{eventType: gitlab.EventTypeIssue}
+	preparedPolicies := b.preparePolicies()
+	filtered := webhook.filterEvent(preparedPolicies)
+
+	var got []policy.Policy
+	for po := range filtered {
+		got = append(got, po)
+	}
 	if got[0].Name != "dummy policy" {
 		t.Errorf("expected dummy policy returned")
 	}
@@ -214,9 +221,18 @@ func TestNoteConditionParsed(t *testing.T) {
        command: show -help`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	got := b.filterPoliciesByEventType(gitlab.EventTypeNote)
+	webhook := Webhook{eventType: gitlab.EventTypeNote}
+	preparedPolicies := b.preparePolicies()
+
+	filtered := webhook.filterEvent(preparedPolicies)
+
+	var got []policy.Policy
+	for po := range filtered {
+		got = append(got, po)
+	}
+
 	if len(got) != 1 {
-		t.Errorf("expected the 1 policy to be returned")
+		t.Errorf("expected 1 policy to be returned, got: %d", len(got))
 	}
 }
 
@@ -229,21 +245,21 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 	}
 
 	p := `policies:
- - name: show bot options
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Issue
-       mentions:
-         - botuser
-       command: show -help
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       mentions:
-         - botuser
-       command: show -help`
+- name: show bot options
+  resource: Note Hook
+  conditions:
+    note:
+      noteType: Issue
+      mentions:
+        - botuser
+      command: show -help
+- name: some other action
+  resource: Note Hook
+  conditions:
+    note:
+      mentions:
+        - botuser
+      command: show -help`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
 	webhook := Webhook{
@@ -268,21 +284,12 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 		},
 	}
 
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
+	preparedPolicies := b.preparePolicies()
+	filtered := webhook.filterEvent(preparedPolicies)
 
 	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
+	for po := range filtered {
+		got = append(got, po)
 	}
 
 	if len(got) == 1 {
@@ -290,7 +297,7 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 	}
 }
 
-func TestNoteConditionNoteTypeFiltered(t *testing.T) {
+func TestNotableTypeFilter(t *testing.T) {
 	//: 12,7,13,14
 	b := Bot{
 		Router: chi.NewRouter(),
@@ -299,22 +306,23 @@ func TestNoteConditionNoteTypeFiltered(t *testing.T) {
 	}
 
 	p := `policies:
- - name: show bot options
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Issue
-       mentions:
-         - botuser
-       command: show -help
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Commit
-       mentions:
-         - botuser
-       command: show -help`
+- name: show bot options
+  resource: Note Hook
+  conditions:
+    note:
+      noteType: Issue
+      mentions:
+        - botuser
+      command: show -help
+- name: some other action
+  resource: Note Hook
+  conditions:
+    note:
+      noteType: Commit
+      mentions:
+        - botuser
+      command: show -help`
+
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 	webhook := Webhook{
 		eventType: gitlab.EventTypeNote,
@@ -346,25 +354,16 @@ func TestNoteConditionNoteTypeFiltered(t *testing.T) {
 		},
 	}
 
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
+	preparedPolicies := b.preparePolicies()
+	filtered := webhook.filterEvent(preparedPolicies)
 
 	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
+	for po := range filtered {
+		got = append(got, po)
 	}
 
 	if len(got) != 1 {
-		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+		t.Errorf("expected 1 policy to be returned, but got: %d", len(got))
 	}
 }
 
@@ -377,18 +376,18 @@ func TestFilterAdditionalType(t *testing.T) {
 	}
 
 	p := `policies:
- - name: show bot options
-   resource: Issue Hook
-   conditions:
-     state: opened
- - name: some other action
-   resource: Note Hook
-   conditions:
-     note:
-       noteType: Commit
-       mentions:
-         - botuser
-       command: show -help`
+- name: show bot options
+  resource: Issue Hook
+  conditions:
+    state: opened
+- name: some other action
+  resource: Note Hook
+  conditions:
+    note:
+      noteType: Commit
+      mentions:
+        - botuser
+      command: show -help`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 	webhook := Webhook{
 		eventType: gitlab.EventTypeNote,
@@ -420,29 +419,20 @@ func TestFilterAdditionalType(t *testing.T) {
 		},
 	}
 
-	in := make(chan policy.Policy)
-	out := make(chan policy.Policy)
-
-	go webhook.filterEvent(in, out)
-
-	go func() {
-		for _, ruleSet := range b.Config.Policies {
-			in <- ruleSet
-		}
-		close(in)
-	}()
+	preparedPolicies := b.preparePolicies()
+	filtered := webhook.filterEvent(preparedPolicies)
 
 	var got []policy.Policy
-	for policies := range out {
-		got = append(got, policies)
+	for po := range filtered {
+		got = append(got, po)
 	}
 
 	if len(got) != 1 {
-		t.Errorf("expected the 1 policy to be returned, but got: %d", len(got))
+		t.Errorf("expected 1 policy to be returned, but got: %d", len(got))
 	}
 }
 
-func TestProcessWebhookNoErrors(t *testing.T) {
+func TestProcessWebhookNoConcurrencyErrors(t *testing.T) {
 	//:
 	b := Bot{
 		Router: chi.NewRouter(),

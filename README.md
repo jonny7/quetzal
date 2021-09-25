@@ -20,24 +20,25 @@ go build -o quetzal ./cmd/quetzal
 ```shell
 ./quetzal -h
 Usage of ./quetzal:
+  - string
+        (optional) webhook secret 
   -bot-server string
-        The base URL the bot lives on (default "https://bot-bot.com")
+        The base URL the bot lives on
   -dry-run
         don't perform any actions, just print out the actions that would be taken if live
   -policies string
-        The relative path to the policies file (default "./.policies.yaml")
+        The relative path to the policies file (default "./examples/.policies.yaml")
   -port int
         The port the bot listens on (default 7838)
   -token string
-        The personal access token for the stated user (default "notareatoken")
+        The personal access token for the stated user
   -user string
-        The Gitlab user this bot will act as (default "username@gitlab.com")
+        The Gitlab user this bot will act as
   -version
         display version of quetzal
   -webhook-endpoint string
         The webhook endpoint (default "/webhook-endpoint")
-  -webhook-secret string
-        The (optional) webhook secret  (default "1234abcd")
+
 ```
 
 #### Versioning
@@ -54,12 +55,11 @@ At its heart, Quetzal is a yaml driven policy based bot. It needs some config pa
 | ----------- | ---------------------- |
 | .policies.yaml | ./.policies.yaml    |
 
-You can see examples of both of these file in the `examples` directory.
+You can see an example `policies.yaml` in the `examples` directory.
 
 ### Policies
 
-Policies are what drives `Quetzal`. There are 4 main properties to a policy, with them all be technically optional. 
-Though most likely, you'll always want an `action` and `name`.
+Policies are what drives `Quetzal`. There are 5 main properties to a policy
 
 A single `Policy` is declared as part of an array of the `Policies` property.
 
@@ -71,6 +71,7 @@ A single `Policy` is declared as part of an array of the `Policies` property.
 - [Actions](#policy-actions)
 
 #### Policy Name
+Is simply the name for this chosen policy 
 ```yaml
 policies:
   - name: Awesome Policy
@@ -81,18 +82,23 @@ policies:
 
 #### Policy Resource
 The resource is the type of webhook this policy is for.
-The available options are:
-    
-- push 
-- tag_push 
-- issue 
-- note 
-- merge_request 
-- wiki_page 
-- pipeline 
-- build 
-- deployment 
-- default
+The available options are listed below and are the values of the `X-Gitlab-Event` header:
+
+- Build Hook
+- Deployment Hook
+- Issue Hook
+- Confidential Issue Hook
+- Job Hook
+- Merge Request Hook
+- Note Hook
+- Confidential Note Hook
+- Pipeline Hook
+- Push Hook
+- Release Hook
+- System Hook
+- Tag Push Hook
+- Wiki Page Hook
+
 ```yaml
 policies:
   - name: assign MR

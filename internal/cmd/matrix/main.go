@@ -109,7 +109,7 @@ func generateMatrix() []Requirement {
 }
 
 func parseFile(contents string) []Requirement {
-	re := regexp.MustCompile(`(?:func)\s(Test\w+)(:?.+)(?s:.{0,2}\s+\/\/\:\s?)([0-9]+(,[0-9]+)?)`)
+	re := regexp.MustCompile(`(?:func)\s(Test\w+)(:?.+)(?s:.{0,2}\s+\/\/\:\s?)([0-9]+(,[0-9]+)*)`)
 	tests := re.FindAllStringSubmatch(contents, -1)
 	var results []Requirement
 	for _, test := range tests {
