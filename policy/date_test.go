@@ -7,7 +7,7 @@ import (
 func TestDateIntervalTypeValidate(t *testing.T) {
 	//: 3
 	dit := DateIntervalType("weeks")
-	got := dit.Validate()
+	got := dit.validate()
 	if got != nil {
 		t.Errorf("expected nil as `%s` is a valid config entry, but received an error %v", dit, got)
 	}
@@ -16,7 +16,7 @@ func TestDateIntervalTypeValidate(t *testing.T) {
 func TestDateIntervalTypeValidateInvalid(t *testing.T) {
 	//: 3
 	dit := DateIntervalType("kittens")
-	got := dit.Validate()
+	got := dit.validate()
 	if got == nil {
 		t.Errorf("expected an error, but did not recevie one for %s", dit)
 	}
@@ -25,7 +25,7 @@ func TestDateIntervalTypeValidateInvalid(t *testing.T) {
 func TestDateConditionValidate(t *testing.T) {
 	//: 2
 	dc := DateCondition("older_than")
-	got := dc.Validate()
+	got := dc.validate()
 	if got != nil {
 		t.Errorf("expected nil as `%s` is a valid entry, but received an error %v", dc, got)
 	}
@@ -34,7 +34,7 @@ func TestDateConditionValidate(t *testing.T) {
 func TestDateConditionValidateInvalid(t *testing.T) {
 	//: 2
 	dc := DateCondition("less_than")
-	got := dc.Validate()
+	got := dc.validate()
 	if got == nil {
 		t.Errorf("expected an error, but did not recevie one for %s", dc)
 	}
@@ -43,7 +43,7 @@ func TestDateConditionValidateInvalid(t *testing.T) {
 func TestDateAttributeValidate(t *testing.T) {
 	//: 1
 	da := DateAttribute("created_at")
-	got := da.Validate()
+	got := da.validate()
 	if got != nil {
 		t.Errorf("expected nil as `%s` is a valid entry, but received an error %v", da, got)
 	}
@@ -52,7 +52,7 @@ func TestDateAttributeValidate(t *testing.T) {
 func TestDateAttributeValidateInvalid(t *testing.T) {
 	//: 1
 	da := DateAttribute("another_date")
-	got := da.Validate()
+	got := da.validate()
 	if got == nil {
 		t.Errorf("expected an error, but did not recevie one for %s", da)
 	}

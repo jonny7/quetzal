@@ -1,6 +1,8 @@
 package policy
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NoteType is the type of note: Commit, MergeRequest, Issue, Snippet
 type NoteType string
@@ -22,30 +24,22 @@ type Note struct {
 	Command string `yaml:"command"`
 }
 
-// Validate confirms that the user provided NoteType is of an expected type
-func (n NoteType) Validate() error {
+func (n *Note) ConditionsMet() bool {
+	return true
+}
+
+// validate confirms that the user provided NoteType is of an expected type
+func (n NoteType) validate() error {
 	switch n {
 	case NoteCommit, NoteIssue:
 		return nil
 	case NoteMergeRequest, NoteSnippet:
 		return fmt.Errorf("MergeRequest and Snippet notes are not current supported")
 	}
-
 	return fmt.Errorf("the provided NoteType of %s is invalid", n)
 }
 
+// ToString returns the NoteType as a string
 func (n NoteType) ToString() string {
 	return string(n)
 }
-
-//
-//func (n *Note) ConditionMet() bool {
-//	return true
-//}
-//
-//func (n *Note) ConditionType() bool {
-//	if n.Type == nil {
-//		return true
-//	}
-//	if n.Type.ToString()
-//}

@@ -1,6 +1,6 @@
 policies:
   - name: assign MR
-    resource: merge_request
+    resource: Merge Request Hook
     conditions:
       date:
         attribute: created_at
@@ -38,7 +38,7 @@ policies:
       comment: |
         Closing this issue, thanks for the fix {{author}}
   - name: Second thing
-    resource: note
+    resource: Note Hook
     conditions:
       state: opened
       labels:
