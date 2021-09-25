@@ -124,16 +124,6 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			p = append(p, v)
 		}
 
-		//in := make(chan policy.Policy)
-		//out := make(chan policy.Policy)
-		//
-		//go webhook.filterEvent(in, out)
-		//
-		//var answer []policy.Policy
-		//for q := range out {
-		//	answer = append(answer, q)
-		//}
-
 		render.Respond(w, r, p)
 	}
 }
@@ -162,6 +152,8 @@ func merge(incoming ...<-chan policy.Policy) <-chan policy.Policy {
 	return outgoing
 }
 
+// preparePolicies creates a channel of policies to process
+// concurrently.
 func (b *Bot) preparePolicies() <-chan policy.Policy {
 	out := make(chan policy.Policy)
 	go func() {
@@ -172,17 +164,6 @@ func (b *Bot) preparePolicies() <-chan policy.Policy {
 	}()
 	return out
 }
-
-//// filterPoliciesByEventType filters each policy by the webhook event
-//func (b *Bot) filterPoliciesByEventType(event gitlab.EventType) []policy.Policy {
-//	var filteredPolicies []policy.Policy
-//	for _, pol := range b.Config.Policies {
-//		if pol.Resource == event {
-//			filteredPolicies = append(filteredPolicies, pol)
-//		}
-//	}
-//	return filteredPolicies
-//}
 
 // createReader takes a file location and returns an io.ReaderCloser
 func createReader(file string) (io.ReadCloser, error) {
@@ -221,11 +202,10 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 // validatePolicies validates all the policies and fields where only certain values are allowed
 // @todo finish validations
 func (b *Bot) validatePolicies() error {
-	for i, p := range b.Config.Policies {
-		if p.Conditions.Date != nil {
-			if err := p.Conditions.Date.Attribute.Validate(); err != nil {
-				return fmt.Errorf("policy number %d, name: %s failed validation: %v", i+1, p.Name, err)
-			}
+	policiesToValidate := b.preparePolicies()
+	for p := range policiesToValidate {
+		if err := p.Validate(); err != nil {
+			return fmt.Errorf("policy named: %s failed validation: %v", p.Name, err)
 		}
 	}
 	return nil
