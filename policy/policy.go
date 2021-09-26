@@ -23,11 +23,11 @@ type Policies struct {
 // Policy is a containing struct that identifies the
 // required policy for a certain webhook
 type Policy struct {
-	Name       string     `yaml:"name,omitempty"`
-	Resource   Resource   `yaml:",inline"`
-	Conditions *Condition `yaml:"conditions,omitempty"`
-	Limit      *Limit     `yaml:"limit,omitempty"`
-	Actions    *Action    `yaml:"actions,omitempty"`
+	Name       string    `yaml:"name,omitempty"`
+	Resource   Resource  `yaml:",inline"`
+	Conditions Condition `yaml:"conditions,omitempty"`
+	Limit      *Limit    `yaml:"limit,omitempty"`
+	Actions    *Action   `yaml:"actions,omitempty"`
 }
 
 // Resource embeds a gitlab.EventType
@@ -101,8 +101,9 @@ func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan Policy {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if p.Resource.EventType != event.ResourceType() {
+		if !p.Resource.conditionMet(event) {
 			checked <- false
+			return
 		}
 		checked <- true
 	}()
@@ -110,11 +111,11 @@ func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan Policy {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		state, err := event.State()
-		if err != nil {
+		if !p.Conditions.State.conditionMet(event) {
 			checked <- false
+			return
 		}
-		checked <- state == p.Conditions.State
+		checked <- true
 	}()
 
 	go func() {
