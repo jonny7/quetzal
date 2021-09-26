@@ -1,6 +1,8 @@
 package policy
 
-import "github.com/xanzy/go-gitlab"
+import (
+	"github.com/xanzy/go-gitlab"
+)
 
 // Stater returns the state of an event if possible
 type Stater interface {
@@ -16,16 +18,4 @@ type Resourcer interface {
 type GitLabAdaptor interface {
 	Stater
 	Resourcer
-}
-
-type MergeEventAdaptor struct {
-	gitlab.MergeEvent
-}
-
-func (m MergeEventAdaptor) State() (string, error) {
-	return m.ObjectAttributes.State, nil
-}
-
-func (m MergeEventAdaptor) ResourceType() gitlab.EventType {
-	return gitlab.EventType(m.ObjectKind)
 }
