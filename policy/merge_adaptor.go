@@ -21,3 +21,11 @@ func (m MergeEventAdaptor) ResourceType() gitlab.EventType {
 func (m MergeEventAdaptor) Milestone() (*int, error) {
 	return &m.ObjectAttributes.MilestoneID, nil
 }
+
+func (m MergeEventAdaptor) Labels() ([]string, error) {
+	var labels []string
+	for _, label := range m.MergeEvent.Labels {
+		labels = append(labels, label.Name)
+	}
+	return labels, nil
+}

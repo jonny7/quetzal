@@ -23,3 +23,7 @@ func (w WikiEventAdaptor) ResourceType() gitlab.EventType {
 func (w WikiEventAdaptor) Milestone() (*int, error) {
 	return nil, fmt.Errorf("WikiPageEvent has not Milestone")
 }
+
+func (w WikiEventAdaptor) Labels() ([]string, error) {
+	return nil, fmt.Errorf("WikiPageEvent has no labels")
+}
