@@ -113,6 +113,7 @@ All available options are type-safe and validated, once the policies file has be
 - [Date](#date-condition)
 - [State](#state-condition)
 - [Milestone](#milestone-condition)
+- [Labels](#labels-condition)
 - [Note](#note-condition)
 
 #### Date Condition
@@ -168,6 +169,26 @@ policies:
 
 #### Milestone Condition
 Milestone is the integer representation on the milestone
+```yaml
+policies:
+  - name: Assign MR
+    resource: Merge Request Hook
+    conditions:
+      milestone: 5
+```
+
+#### Labels Condition
+The Labels condition accepts an array of labels by name to filter webhooks on.
+The webhook must match all the provided labels on the policy to be valid.
+```yaml
+policies:
+  - name: Assign MR
+    resource: Merge Request Hook
+    conditions:
+      labels:
+        - done
+        - kittens       
+```
 
 #### Note Condition
 The available options for `note` are:
