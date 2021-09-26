@@ -69,6 +69,10 @@ func (r Resource) validate() error {
 		gitlab.EventTypeWikiPage, r.EventType)
 }
 
+func (r Resource) conditionMet(event GitLabAdaptor) bool {
+	return r.EventType == event.ResourceType()
+}
+
 // Validate houses a series of validation checks on the
 // user specified yaml.
 func (p *Policy) Validate() error {
@@ -89,7 +93,7 @@ func (p *Policy) Validate() error {
 	return nil
 }
 
-func (p Policy) ConditionsMet() <-chan Policy {
+func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan Policy {
 	valid := make(chan Policy)
 	checked := make(chan bool)
 	var wg sync.WaitGroup
@@ -97,7 +101,20 @@ func (p Policy) ConditionsMet() <-chan Policy {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		checked <- true //p.Conditions.Note.ConditionsMet(ev)
+		if p.Resource.EventType != event.ResourceType() {
+			checked <- false
+		}
+		checked <- true
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		state, err := event.State()
+		if err != nil {
+			checked <- false
+		}
+		checked <- state == p.Conditions.State
 	}()
 
 	go func() {
