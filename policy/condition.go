@@ -10,7 +10,7 @@ type Condition struct {
 	// Milestone is the milestone of the issue
 	Milestone *Milestone `yaml:",inline,omitempty"`
 	// Labels provides an array of required labels for the condition to be met
-	Labels []string `yaml:"labels,omitempty"`
+	Labels Labels `yaml:",inline,omitempty"`
 	// ForbiddenLabels is an array of labels to not trigger the condition
 	ForbiddenLabels []string `yaml:"forbiddenLabels,omitempty"`
 	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
