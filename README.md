@@ -67,7 +67,7 @@ A single `Policy` is declared as part of an array of the `Policies` property.
 - [Name](#policy-name)
 - [Resource](#policy-resource)
 - [Conditions](#policy-conditions)
-- Limit
+- [Limit](#policy-limit)
 - [Actions](#policy-actions)
 
 #### Policy Name
@@ -101,7 +101,7 @@ The available options are listed below and are the values of the `X-Gitlab-Event
 
 ```yaml
 policies:
-  - name: assign MR
+  - name: Assign MR
     resource: Merge Request Hook
 ```
 
@@ -111,6 +111,8 @@ All available options are type-safe and validated, once the policies file has be
 
 
 - [Date](#date-condition)
+- [State](#state-condition)
+- [Milestone](#milestone-condition)
 - [Note](#note-condition)
 
 #### Date Condition
@@ -134,8 +136,40 @@ An example date condition could look like this:
         interval: 10
 ```
 
-#### Note Condition
+#### State Condition
+State must have the available options for hooks that have this property.
+```yaml
+policies:
+  - name: Assign MR
+    resource: Merge Request Hook
+    conditions:
+      state: open
+```
+`Merge`
+- open
+- close
+- reopen
+- update
+- approved
+- unapproved
+- merge
 
+`Issue`
+
+- open
+- close
+- reopen
+- update
+
+`Release`
+
+- create
+- update
+
+#### Milestone Condition
+Milestone is the integer representation on the milestone
+
+#### Note Condition
 The available options for `note` are:
 
 | Property      | required | options                     |
@@ -154,6 +188,8 @@ The note condition allows your bot to respond to certain notes or even commands.
           - botUser
         command: show -help
 ```
+
+#### Policy Limit
 
 #### Policy Actions
 

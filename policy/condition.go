@@ -5,10 +5,10 @@ package policy
 type Condition struct {
 	// Date is a struct to manage date related entries
 	Date *Date `yaml:"date,omitempty"`
-	// State is the state of the webhook issue
-	State string `yaml:"state,omitempty"`
+	// State is the expected state of the webhook event
+	State *State `yaml:",inline,omitempty"`
 	// Milestone is the milestone of the issue
-	Milestone string `yaml:"milestone,omitempty"`
+	Milestone *Milestone `yaml:",inline,omitempty"`
 	// Labels provides an array of required labels for the condition to be met
 	Labels []string `yaml:"labels,omitempty"`
 	// ForbiddenLabels is an array of labels to not trigger the condition
