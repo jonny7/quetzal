@@ -8,7 +8,7 @@ type Condition struct {
 	// State is the expected state of the webhook event
 	State *State `yaml:",inline,omitempty"`
 	// Milestone is the milestone of the issue
-	Milestone *string `yaml:"milestone,omitempty"`
+	Milestone *Milestone `yaml:",inline,omitempty"`
 	// Labels provides an array of required labels for the condition to be met
 	Labels []string `yaml:"labels,omitempty"`
 	// ForbiddenLabels is an array of labels to not trigger the condition

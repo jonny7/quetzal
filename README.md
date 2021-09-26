@@ -112,6 +112,7 @@ All available options are type-safe and validated, once the policies file has be
 
 - [Date](#date-condition)
 - [State](#state-condition)
+- [Milestone](#milestone-condition)
 - [Note](#note-condition)
 
 #### Date Condition
@@ -165,8 +166,10 @@ policies:
 - create
 - update
 
-#### Note Condition
+#### Milestone Condition
+Milestone is the integer representation on the milestone
 
+#### Note Condition
 The available options for `note` are:
 
 | Property      | required | options                     |

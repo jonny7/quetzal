@@ -8,7 +8,7 @@ policies:
         intervalType: days
         interval: 10
       state: open
-      milestone: v1
+      milestone: 6
       labels:
         - label 1
         - label 2
