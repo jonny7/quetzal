@@ -107,15 +107,15 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			render.Respond(w, r, Message{Msg: fmt.Sprintf("Could not decode webhook: %v", err)})
 			return
 		}
-		webhook := Webhook{
-			eventType: eventType,
-			event:     event,
+		webhook := policy.Webhook{
+			EventType: eventType,
+			Event:     event,
 		}
 
 		preparedPolicies := b.preparePolicies()
 		workers := make([]<-chan policy.Policy, runtime.NumCPU())
 		for i := 0; i < runtime.NumCPU(); i++ {
-			workers[i] = webhook.filterEvent(preparedPolicies)
+			workers[i] = webhook.FilterEvent(preparedPolicies)
 		}
 
 		validPolicies := merge(workers...)

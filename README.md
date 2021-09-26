@@ -102,7 +102,7 @@ The available options are listed below and are the values of the `X-Gitlab-Event
 ```yaml
 policies:
   - name: assign MR
-    resource: merge_request
+    resource: Merge Request Hook
 ```
 
 #### Policy Conditions
