@@ -10,7 +10,7 @@ func (m *Milestone) conditionMet(event GitLabAdaptor) bool {
 	}
 	currentMilestone, err := event.Milestone()
 	if err != nil {
-		return false // state is being applied to an event that doesn't have a state
+		return false
 	}
 	if *currentMilestone == 0 {
 		return true

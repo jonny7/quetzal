@@ -14,9 +14,8 @@ func TestConditionsMetResourceTypeNegative(t *testing.T) {
 	p := Policy{Resource: Resource{
 		EventType: gitlab.EventTypeBuild,
 	},
-		Conditions: Condition{
-			Labels: []string{"done"},
-		}}
+		Conditions: Condition{},
+	}
 
 	got := p.Resource.conditionMet(adaptor)
 	if got {

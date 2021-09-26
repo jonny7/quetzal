@@ -19,9 +19,15 @@ type Milestoner interface {
 	Milestone() (*int, error)
 }
 
+// Labeler returns the labels if available
+type Labeler interface {
+	Labels() ([]string, error)
+}
+
 // GitLabAdaptor wraps all the events
 type GitLabAdaptor interface {
 	Stater
 	Resourcer
 	Milestoner
+	Labeler
 }
