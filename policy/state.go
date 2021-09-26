@@ -16,5 +16,5 @@ func (s *State) conditionMet(event GitLabAdaptor) bool {
 	if err != nil {
 		return false // state is being applied to an event that doesn't have a state
 	}
-	return strings.ToLower(currentState) == strings.ToLower(s.State)
+	return strings.ToLower(*currentState) == strings.ToLower(s.State)
 }

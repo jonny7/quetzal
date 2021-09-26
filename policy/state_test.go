@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func TestConditionMetResourceType(t *testing.T) {
-	//: 6
+func TestConditionsMetResourceTypeNegative(t *testing.T) {
+	//: 7,16
 	adaptor := MergeEventAdaptor{gitlab.MergeEvent{
 		ObjectKind: string(gitlab.EventTypeMergeRequest)},
 	}
@@ -25,7 +25,7 @@ func TestConditionMetResourceType(t *testing.T) {
 }
 
 func TestConditionsMetState(t *testing.T) {
-	//: 6
+	//: 7,17
 	adaptor := MergeEventAdaptor{gitlab.MergeEvent{
 		ObjectAttributes: struct {
 			ID                       int                 `json:"id"`
@@ -96,7 +96,7 @@ func TestConditionsMetState(t *testing.T) {
 }
 
 func TestConditionsMetNoStateInPolicy(t *testing.T) {
-	//: 6
+	//: 7,17
 	adaptor := MergeEventAdaptor{gitlab.MergeEvent{
 		ObjectAttributes: struct {
 			ID                       int                 `json:"id"`
@@ -160,12 +160,12 @@ func TestConditionsMetNoStateInPolicy(t *testing.T) {
 
 	got := p.Conditions.State.conditionMet(adaptor)
 	if !got {
-		t.Errorf("expected true as policy doesn't want to filter on a state")
+		t.Errorf("expected true as policy doesn't have to filter on a state")
 	}
 }
 
 func TestConditionsMetWebhookHasNoState(t *testing.T) {
-	//: 6
+	//: 7,17
 	adaptor := WikiEventAdaptor{gitlab.WikiPageEvent{
 		ObjectAttributes: struct {
 			Title   string `json:"title"`
@@ -189,6 +189,6 @@ func TestConditionsMetWebhookHasNoState(t *testing.T) {
 
 	got := p.Conditions.State.conditionMet(adaptor)
 	if got {
-		t.Errorf("expected false as wiki events din't have a state")
+		t.Errorf("expected false as wiki events don't have a state")
 	}
 }
