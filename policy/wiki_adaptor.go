@@ -20,10 +20,12 @@ func (w WikiEventAdaptor) ResourceType() gitlab.EventType {
 	return gitlab.EventType(w.ObjectKind)
 }
 
+// Milestone returns the webhook's ID
 func (w WikiEventAdaptor) Milestone() (*int, error) {
 	return nil, fmt.Errorf("WikiPageEvent has not Milestone")
 }
 
+// Labels returns the labels for a MergeEvent
 func (w WikiEventAdaptor) Labels() ([]string, error) {
 	return nil, fmt.Errorf("WikiPageEvent has no labels")
 }

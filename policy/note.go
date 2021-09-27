@@ -8,12 +8,18 @@ import (
 type NoteType string
 
 const (
-	NoteCommit       NoteType = "Commit"
+	// NoteCommit are comments on Commits
+	NoteCommit NoteType = "Commit"
+	// NoteMergeRequest are comments on MergeRequests
 	NoteMergeRequest NoteType = "MergeRequest"
-	NoteIssue        NoteType = "Issue"
-	NoteSnippet      NoteType = "Snippet"
+	// NoteIssue are comments on Issues
+	NoteIssue NoteType = "Issue"
+	// NoteSnippet are comments on Snippets
+	NoteSnippet NoteType = "Snippet"
 )
 
+// Note represents a GitLab Note, which is essentially a comment on
+// a series of different scenarios and event types
 type Note struct {
 	// Type is the NoteType of the note from GitLab. If you need to narrow down
 	// the type of note then use this, if left blank, then it will apply to all note types
@@ -24,6 +30,8 @@ type Note struct {
 	Command string `yaml:"command"`
 }
 
+// ConditionsMet confirms whether the webhook matches the policy for
+// the Note type
 func (n *Note) ConditionsMet() bool {
 	return true
 }
