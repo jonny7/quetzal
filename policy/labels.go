@@ -1,7 +1,14 @@
 package policy
 
+// Labels represent the required labels policy condition
 type Labels struct {
 	labels []string `yaml:"labels"`
+}
+
+// ForbiddenLabels represent any label that should exclude the webhook
+// if present
+type ForbiddenLabels struct {
+	forbiddenLabels []string `yaml:"forbiddenLabels"`
 }
 
 func (l Labels) conditionMet(event GitLabAdaptor) bool {
@@ -16,6 +23,27 @@ func (l Labels) conditionMet(event GitLabAdaptor) bool {
 	for _, policyLabel := range l.labels {
 		valid = existsInSlice(webhookLabels, policyLabel)
 		if !valid {
+			break
+		}
+	}
+	return valid
+}
+
+func (fl ForbiddenLabels) conditionMet(event GitLabAdaptor) bool {
+	if len(fl.forbiddenLabels) == 0 {
+		return true
+	}
+
+	webhookLabels, err := event.Labels()
+	if err != nil {
+		return false
+	}
+
+	var valid = true
+	for _, forbiddenPolicyLabel := range fl.forbiddenLabels {
+		reject := existsInSlice(webhookLabels, forbiddenPolicyLabel)
+		if reject {
+			valid = false
 			break
 		}
 	}

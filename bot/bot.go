@@ -223,7 +223,7 @@ func New(config Config, policies string) (*Bot, error) {
 
 	p, err := createReader(policies)
 	if err != nil {
-		b.Logger.Error().Msg(fmt.Sprintf("an error occured creating a reader for the policy file: %v", err))
+		b.Logger.Error().Msg(fmt.Sprintf("an error occurred creating a reader for the policy file: %v", err))
 	}
 	if err = b.loadPolicies(p); err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
