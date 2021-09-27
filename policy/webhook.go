@@ -4,9 +4,12 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
+// Webhook is a wrapper around the incoming webhook
 type Webhook struct {
+	// EventType is the type of webhook, taken from the X-GitLab-Header
 	EventType gitlab.EventType
-	Event     interface{}
+	// Event is the payload of the webhook
+	Event interface{}
 }
 
 // FilterEvent processing policies against the incoming hook and only returns policies

@@ -93,6 +93,8 @@ func (p *Policy) Validate() error {
 	return nil
 }
 
+// ConditionsMet runs a series of checks against all the other conditions that make up a Policy
+// in order to report back whether a Policy's criteria is matched by the webhook and an action should occur
 func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan Policy {
 	valid := make(chan Policy)
 	checked := make(chan bool)

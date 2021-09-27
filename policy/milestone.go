@@ -1,5 +1,6 @@
 package policy
 
+// Milestone represents the integer id from GitLab
 type Milestone struct {
 	Milestone int `yaml:"milestone"`
 }
