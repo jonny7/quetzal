@@ -114,6 +114,7 @@ All available options are type-safe and validated, once the policies file has be
 - [State](#state-condition)
 - [Milestone](#milestone-condition)
 - [Labels](#labels-condition)
+- [Forbidden Labels](#forbidden-labels-condition)
 - [Note](#note-condition)
 
 #### Date Condition
@@ -187,8 +188,25 @@ policies:
     conditions:
       labels:
         - done
-        - kittens       
+        - pre-release       
 ```
+
+#### Forbidden Labels Condition
+The forbidden labels condition takes an array of labels by name to further filter the `labels` condition.
+Any forbidden label specified on the policy and found on the webhook will remove that webhook from being processed.
+```yaml
+policies:
+  - name: Assign MR
+    resource: Merge Request Hook
+    conditions:
+      labels:
+        - done
+        - pre-release
+      forbiddenLabels:
+        - api
+```
+
+The above would rule out any
 
 #### Note Condition
 The available options for `note` are:
