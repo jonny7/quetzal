@@ -22,6 +22,7 @@ func (m MergeEventAdaptor) Milestone() (*int, error) {
 	return &m.ObjectAttributes.MilestoneID, nil
 }
 
+// Labels returns the labels for a MergeEvent
 func (m MergeEventAdaptor) Labels() ([]string, error) {
 	var labels []string
 	for _, label := range m.MergeEvent.Labels {
