@@ -12,7 +12,7 @@ type Condition struct {
 	// Labels provides an array of required labels for the condition to be met
 	Labels Labels `yaml:",inline,omitempty"`
 	// ForbiddenLabels is an array of labels to not trigger the condition
-	ForbiddenLabels []string `yaml:"forbiddenLabels,omitempty"`
+	ForbiddenLabels ForbiddenLabels `yaml:",inline,omitempty"`
 	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
 	Discussion *Discussion `yaml:"discussion,omitempty"`
 	// Note is the contents of a given note/comment on various different events like commit, mr, issue, code snippet

@@ -56,3 +56,57 @@ func TestConditionsMetNoLabels(t *testing.T) {
 		t.Errorf("expected true as policy has 0 labels")
 	}
 }
+
+func TestConditionsMetForbiddenLabels(t *testing.T) {
+	//: 7,20
+	adaptor := MergeEventAdaptor{MergeEvent: gitlab.MergeEvent{
+		Labels: []*gitlab.Label{{Name: "something"}},
+	}}
+
+	p := Policy{
+		Conditions: Condition{
+			ForbiddenLabels: ForbiddenLabels{forbiddenLabels: []string{"something"}},
+		},
+	}
+
+	got := p.Conditions.ForbiddenLabels.conditionMet(adaptor)
+	if got {
+		t.Errorf("expected false as webhook contains a forbidden label in policy")
+	}
+}
+
+func TestConditionsMetForbiddenLabelsMultiple(t *testing.T) {
+	//: 7,20
+	adaptor := MergeEventAdaptor{MergeEvent: gitlab.MergeEvent{
+		Labels: []*gitlab.Label{{Name: "something"}, {Name: "else"}},
+	}}
+
+	p := Policy{
+		Conditions: Condition{
+			ForbiddenLabels: ForbiddenLabels{forbiddenLabels: []string{"something"}},
+		},
+	}
+
+	got := p.Conditions.ForbiddenLabels.conditionMet(adaptor)
+	if got {
+		t.Errorf("expected false as webhook contains a forbidden label in policy")
+	}
+}
+
+func TestConditionsMetForbiddenLabelsNegative(t *testing.T) {
+	//: 7,20
+	adaptor := MergeEventAdaptor{MergeEvent: gitlab.MergeEvent{
+		Labels: []*gitlab.Label{{Name: "something"}, {Name: "else"}},
+	}}
+
+	p := Policy{
+		Conditions: Condition{
+			ForbiddenLabels: ForbiddenLabels{forbiddenLabels: []string{"another"}},
+		},
+	}
+
+	got := p.Conditions.ForbiddenLabels.conditionMet(adaptor)
+	if !got {
+		t.Errorf("expected false as webhook contains a forbidden label in policy")
+	}
+}
