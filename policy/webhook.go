@@ -34,7 +34,7 @@ func (w *Webhook) FilterEvent(in <-chan Policy) <-chan Policy {
 				//	validPolicies <- <-pol.ConditionsMet()
 				//}
 				//default:
-				//	validPolicies <- <-pol.ConditionsMet()
+				validPolicies <- pol //.ConditionsMet()
 			}
 		}
 		close(validPolicies)
