@@ -29,7 +29,7 @@ func (d *DateAttribute) validate() error {
 	case createdAt, updatedAt:
 		return nil
 	}
-	return fmt.Errorf("`date:attribute` allowed options are: `%s`, `%s`, But received: %v", createdAt, updatedAt, d)
+	return fmt.Errorf("`date:attribute` allowed options are: `%s`, `%s`, But received: %v", createdAt, updatedAt, *d)
 }
 
 // DateCondition is the greater than or less than [date] filter
@@ -46,7 +46,7 @@ func (d *DateCondition) validate() error {
 	case olderThan, newerThan:
 		return nil
 	}
-	return fmt.Errorf("`date:condition` allowed options are: `%s`, `%s`. But received: %v", olderThan, newerThan, d)
+	return fmt.Errorf("`date:condition` allowed options are: `%s`, `%s`. But received: %v", olderThan, newerThan, *d)
 }
 
 // DateIntervalType is the type of available interval
@@ -66,5 +66,5 @@ func (d *DateIntervalType) validate() error {
 	case days, weeks, months, years:
 		return nil
 	}
-	return fmt.Errorf("`date:intervalType` allowed options are: `%s`, `%s`, `%s`, `%s`. But received: %v", days, weeks, months, years, d)
+	return fmt.Errorf("`date:intervalType` allowed options are: `%s`, `%s`, `%s`, `%s`. But received: %v", days, weeks, months, years, *d)
 }

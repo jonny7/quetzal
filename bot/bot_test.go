@@ -189,13 +189,15 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
 
 	p := `policies:
   - name: assign MR
-    resource: merge_request
+    resource: Merge Request Hook
     conditions:
       date:
         attribute: not_a_valid_input`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	err := b.validatePolicies()
+	prep := b.preparePolicies()
+
+	err := <-b.validatePolicies(prep)
 	if err == nil {
 		t.Errorf("expected an error here as `not_a_valid_input` is not valid")
 	}
@@ -293,6 +295,61 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 
 	if len(got) == 1 {
 		t.Errorf("expected 2 policies to be returned, but got: %d", len(got))
+	}
+}
+
+func TestChannelMerge(t *testing.T) {
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+- name: show bot options
+  resource: Note Hook
+- name: trigger build
+  resource: Note Hook
+- name: trigger release
+  resource: Note Hook`
+
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	webhook := policy.Webhook{
+		EventType: gitlab.EventTypeNote,
+		Event: gitlab.IssueCommentEvent{
+			ObjectAttributes: struct {
+				ID           int            `json:"id"`
+				Note         string         `json:"note"`
+				NoteableType string         `json:"noteable_type"`
+				AuthorID     int            `json:"author_id"`
+				CreatedAt    string         `json:"created_at"`
+				UpdatedAt    string         `json:"updated_at"`
+				ProjectID    int            `json:"project_id"`
+				Attachment   string         `json:"attachment"`
+				LineCode     string         `json:"line_code"`
+				CommitID     string         `json:"commit_id"`
+				NoteableID   int            `json:"noteable_id"`
+				System       bool           `json:"system"`
+				StDiff       []*gitlab.Diff `json:"st_diff"`
+				URL          string         `json:"url"`
+			}{NoteableType: "Issue"},
+		},
+	}
+
+	preparedPolicies := b.preparePolicies()
+	workers := make([]<-chan policy.Policy, 3)
+	for i := 0; i < 3; i++ {
+		workers[i] = webhook.FilterEvent(preparedPolicies)
+	}
+
+	merged := mergePolicies(workers...)
+	var got int
+	for range merged {
+		got++
+	}
+	if got != 3 {
+		t.Errorf("expected 3 records when merged, but got: %d", got)
 	}
 }
 
