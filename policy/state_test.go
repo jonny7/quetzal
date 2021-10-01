@@ -198,7 +198,7 @@ func TestStateValidationOfMergeNegative(t *testing.T) {
 		Conditions: Condition{State: &State{State: "unknown"}},
 		Resource:   Resource{EventType: gitlab.EventTypeMergeRequest},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got == nil {
 		t.Errorf("expected got to be an error as unknown is not a valid state")
 	}
@@ -210,7 +210,7 @@ func TestStateValidationOfMerge(t *testing.T) {
 		Conditions: Condition{State: &State{State: "reopen"}},
 		Resource:   Resource{EventType: gitlab.EventTypeMergeRequest},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got != nil {
 		t.Errorf("expected got to be nil as reopen is a valid state")
 	}
@@ -222,7 +222,7 @@ func TestStateValidationOfIssueNegative(t *testing.T) {
 		Conditions: Condition{State: &State{State: "merge"}},
 		Resource:   Resource{EventType: gitlab.EventTypeIssue},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got == nil {
 		t.Errorf("expected got to be an error as merge is not a valid state")
 	}
@@ -234,7 +234,7 @@ func TestStateValidationOfIssue(t *testing.T) {
 		Conditions: Condition{State: &State{State: "reopen"}},
 		Resource:   Resource{EventType: gitlab.EventTypeIssue},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got != nil {
 		t.Errorf("expected got to be nil as reopen is a valid state")
 	}
@@ -246,7 +246,7 @@ func TestStateValidationOfReleaseNegative(t *testing.T) {
 		Conditions: Condition{State: &State{State: "open"}},
 		Resource:   Resource{EventType: gitlab.EventTypeRelease},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got == nil {
 		t.Errorf("expected got to be an error as open is not a valid state")
 	}
@@ -258,7 +258,7 @@ func TestStateValidationOfRelease(t *testing.T) {
 		Conditions: Condition{State: &State{State: "update"}},
 		Resource:   Resource{EventType: gitlab.EventTypeRelease},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got != nil {
 		t.Errorf("expected got to be nil as update is a valid state")
 	}
@@ -270,7 +270,7 @@ func TestStateOnInvalidEvent(t *testing.T) {
 		Conditions: Condition{State: &State{State: "update"}},
 		Resource:   Resource{EventType: gitlab.EventTypeWikiPage},
 	}
-	got := p.Conditions.State.validate(p)
+	got := p.Conditions.State.validate(p.Resource.EventType)
 	if got == nil {
 		t.Errorf("expected got to be an error as event can't have a state")
 	}

@@ -54,20 +54,20 @@ func (s *State) conditionMet(event GitLabAdaptor) bool {
 	return strings.ToLower(*currentState) == strings.ToLower(s.State)
 }
 
-func (s *State) validate(p Policy) error {
+func (s *State) validate(e gitlab.EventType) error {
 	if s == nil {
 		return nil
 	}
-	if p.Resource.EventType == gitlab.EventTypeMergeRequest {
+	if e == gitlab.EventTypeMergeRequest {
 		return validateMergeRequestState(*s)
 	}
-	if p.Resource.EventType == gitlab.EventTypeIssue {
+	if e == gitlab.EventTypeIssue {
 		return validateIssueState(*s)
 	}
-	if p.Resource.EventType == gitlab.EventTypeRelease {
+	if e == gitlab.EventTypeRelease {
 		return validateReleaseState(*s)
 	}
-	return fmt.Errorf("state can not be applied on the webhook %s", p.Resource.EventType)
+	return fmt.Errorf("state can not be applied on the webhook %s", e)
 }
 
 func validateMergeRequestState(s State) error {

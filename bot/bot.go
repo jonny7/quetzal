@@ -118,7 +118,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			workers[i] = webhook.FilterEvent(preparedPolicies)
 		}
 
-		validPolicies := merge(workers...)
+		validPolicies := mergePolicies(workers...)
 		var p []policy.Policy
 		for v := range validPolicies {
 			p = append(p, v)
@@ -128,7 +128,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 	}
 }
 
-func merge(incoming ...<-chan policy.Policy) <-chan policy.Policy {
+func mergePolicies(incoming ...<-chan policy.Policy) <-chan policy.Policy {
 	var wg sync.WaitGroup
 
 	wg.Add(len(incoming))
@@ -152,8 +152,7 @@ func merge(incoming ...<-chan policy.Policy) <-chan policy.Policy {
 	return outgoing
 }
 
-// preparePolicies creates a channel of policies to process
-// concurrently.
+// preparePolicies creates a channel of policies to process concurrently.
 func (b *Bot) preparePolicies() <-chan policy.Policy {
 	out := make(chan policy.Policy)
 	go func() {
@@ -200,15 +199,15 @@ func (b *Bot) loadPolicies(reader io.ReadCloser) error {
 }
 
 // validatePolicies validates all the policies and fields where only certain values are allowed
-// @todo finish validations
-func (b *Bot) validatePolicies() error {
-	policiesToValidate := b.preparePolicies()
-	for p := range policiesToValidate {
-		if err := p.Validate(); err != nil {
-			return fmt.Errorf("policy named: %s failed validation: %v", p.Name, err)
+func (b *Bot) validatePolicies(policies <-chan policy.Policy) <-chan error {
+	ch := make(chan error)
+	go func() {
+		for p := range policies {
+			ch <- <-p.Validate()
 		}
-	}
-	return nil
+		close(ch)
+	}()
+	return ch
 }
 
 // New creates a new bot taking the config filename and path from `main`'s arguments
@@ -228,12 +227,46 @@ func New(config Config, policies string) (*Bot, error) {
 	if err = b.loadPolicies(p); err != nil {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
 	}
-	if err = b.validatePolicies(); err != nil {
-		b.Logger.Error().Msg(fmt.Sprintf("invalid policy: %v", err))
+
+	policiesToValidate := b.preparePolicies()
+	workers := make([]<-chan error, runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		workers[i] = b.validatePolicies(policiesToValidate)
+	}
+	validated := mergeErrors(workers...)
+
+	for v := range validated {
+		if v != nil {
+			b.Logger.Fatal().Msg(fmt.Sprintf("invalid policy: %v", v))
+		}
 	}
 
 	b.Router.Use(render.SetContentType(render.ContentTypeJSON))
 	b.Router.Use(middleware.Recoverer)
 	b.routes(b.Router)
 	return b, nil
+}
+
+func mergeErrors(incoming ...<-chan error) <-chan error {
+	var wg sync.WaitGroup
+
+	wg.Add(len(incoming))
+	outgoing := make(chan error)
+	multiplexer := func(err <-chan error) {
+		defer wg.Done()
+		for e := range err {
+			outgoing <- e
+		}
+	}
+
+	for _, ch := range incoming {
+		go multiplexer(ch)
+	}
+
+	go func() {
+		wg.Wait()
+		close(outgoing)
+	}()
+
+	return outgoing
 }
