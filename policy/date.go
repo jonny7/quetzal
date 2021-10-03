@@ -1,6 +1,9 @@
 package policy
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Date is possible condition that can be used to allow or
 // disallow the behaviour of the Bot see `config.yaml`
@@ -22,6 +25,46 @@ const (
 	createdAt DateAttribute = "created_at"
 	updatedAt DateAttribute = "updated_at"
 )
+
+// validateAll wraps all the date sub-types validations into a single call
+func (d *Date) validateAll() error {
+	if d == nil {
+		return nil
+	}
+	ch := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		if err := d.Attribute.validate(); err != nil {
+			ch <- err
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := d.Condition.validate(); err != nil {
+			ch <- err
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := d.IntervalType.validate(); err != nil {
+			ch <- err
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for v := range ch {
+		if v != nil {
+			return v
+		}
+	}
+	return nil
+}
 
 // validate confirms only the values created_at and updated_at were input
 func (d *DateAttribute) validate() error {

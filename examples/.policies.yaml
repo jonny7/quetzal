@@ -40,7 +40,6 @@ policies:
   - name: Second thing
     resource: Note Hook
     conditions:
-      state: open
       labels:
         - label 1
         - label 2
