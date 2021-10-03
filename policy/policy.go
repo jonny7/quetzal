@@ -71,39 +71,33 @@ func (p *Policy) Validate() <-chan error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := p.Resource.validate()
-		if err != nil {
+		if err := p.Resource.validate(); err != nil {
 			ch <- err
 		}
 	}()
 
-	if p.Conditions.Date != nil {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := p.Conditions.Date.Attribute.validate()
-			if err != nil {
-				ch <- err
-			}
-		}()
-	}
-	//	if err := p.Conditions.Date.Condition.validate(); err != nil {
-	//		ch <- err
-	//	}
-	//	if err := p.Conditions.Date.IntervalType.validate(); err != nil {
-	//		ch <- err
-	//	}
-	//}
-	//if p.Conditions.State != nil {
-	//	if err := p.Conditions.State.validate(p.Resource.EventType); err != nil {
-	//		ch <- err
-	//	}
-	//}
-	//if p.Conditions.Milestone != nil {
-	//	if err := p.Conditions.Milestone.validate(); err != nil {
-	//		ch <- err
-	//	}
-	//}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := p.Conditions.Date.validateAll(); err != nil {
+			ch <- err
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := p.Conditions.State.validate(p.Resource.EventType); err != nil {
+			ch <- err
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := p.Conditions.Milestone.validate(); err != nil {
+			ch <- err
+		}
+	}()
 	go func() {
 		wg.Wait()
 		close(ch)
