@@ -217,16 +217,21 @@ The available options for `note` are:
 | mentions      | no       | an array of mentioned users required to trigger action |
 | command       | no       | any command you wish to use  |
 
-The note condition allows your bot to respond to certain notes or even commands. As an example image the time a user mentions your bot with a specified command phrase.
-`@yourbot show -help`
+The note condition allows your bot to respond to certain notes or even commands.
+When listing multiple mentions, this policy will be triggered if any one of the array of mentions is found in the note.
+As an example imagine the time a user mentions your bot with a specified command phrase.
+
+`@botUser show -help`
 ```yaml
     conditions:
       note:
         noteType: Issue
         mentions:
-          - botUser
+          - @botUser
         command: show -help
 ```
+
+In the above example, you could omit the `mentions` field and the command alone will have triggered the policy.
 
 #### Policy Limit
 
