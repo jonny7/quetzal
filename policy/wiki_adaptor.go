@@ -29,3 +29,15 @@ func (w WikiEventAdaptor) Milestone() (*int, error) {
 func (w WikiEventAdaptor) Labels() ([]string, error) {
 	return nil, fmt.Errorf("WikiPageEvent has no labels")
 }
+
+func (w WikiEventAdaptor) Note() (*string, error) {
+	return nil, fmt.Errorf("WikiPageEvent event hooks don't have a note field")
+}
+
+func (w WikiEventAdaptor) Mentions() []string {
+	return nil
+}
+
+func (w WikiEventAdaptor) NoteType() (*string, error) {
+	return nil, fmt.Errorf("WikiPageEvent event hooks don't have a note type")
+}

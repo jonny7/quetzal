@@ -1,6 +1,9 @@
 package policy
 
-import "github.com/xanzy/go-gitlab"
+import (
+	"fmt"
+	"github.com/xanzy/go-gitlab"
+)
 
 // MergeEventAdaptor wraps the gitlab.MergeEvent
 type MergeEventAdaptor struct {
@@ -29,4 +32,16 @@ func (m MergeEventAdaptor) Labels() ([]string, error) {
 		labels = append(labels, label.Name)
 	}
 	return labels, nil
+}
+
+func (m MergeEventAdaptor) Note() (*string, error) {
+	return nil, fmt.Errorf("MergeEvent hooks don't have a note field")
+}
+
+func (m MergeEventAdaptor) Mentions() []string {
+	return nil
+}
+
+func (m MergeEventAdaptor) NoteType() (*string, error) {
+	return nil, fmt.Errorf("MergeEvent hooks don't have a note type")
 }
