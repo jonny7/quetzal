@@ -23,14 +23,14 @@ func (w *Webhook) FilterEvent(in <-chan Policy) <-chan Policy {
 				me := MergeEventAdaptor{ev}
 				validPolicies <- <-pol.ConditionsMet(me)
 			case gitlab.CommitCommentEvent:
-				//if pol.Conditions.Note.Type == nil || ev.ObjectAttributes.NoteableType == pol.Conditions.Note.Type.ToString() {
+				//if pol.Conditions.Note.Type == nil || ev.ObjectAttributes.NoteableType == pol.Conditions.Note.Type.toString() {
 				//	validPolicies <- <-pol.ConditionsMet()
 				//}
 			// @todo these fail to be decoded when using the payload from GitLab docs
 			// case gitlab.MergeCommentEvent:
 			// case gitlab.SnippetCommentEvent:
 			case gitlab.IssueCommentEvent:
-				//if pol.Conditions.Note.Type == nil || ev.ObjectAttributes.NoteableType == pol.Conditions.Note.Type.ToString() {
+				//if pol.Conditions.Note.Type == nil || ev.ObjectAttributes.NoteableType == pol.Conditions.Note.Type.toString() {
 				//	validPolicies <- <-pol.ConditionsMet()
 				//}
 				//default:
