@@ -24,10 +24,18 @@ type Labeler interface {
 	Labels() ([]string, error)
 }
 
+// Noter returns information about the Note and NoteType
+type Noter interface {
+	Note() (*string, error)
+	Mentions() []string
+	NoteType() (*string, error)
+}
+
 // GitLabAdaptor wraps all the events
 type GitLabAdaptor interface {
 	Stater
 	Resourcer
 	Milestoner
 	Labeler
+	Noter
 }
