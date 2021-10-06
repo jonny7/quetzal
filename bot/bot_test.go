@@ -288,7 +288,7 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 	preparedPolicies := b.preparePolicies()
 	filtered := webhook.FilterEvent(preparedPolicies)
 
-	var got []policy.Policy
+	var got []policy.WebhookResult
 	for po := range filtered {
 		got = append(got, po)
 	}
@@ -317,28 +317,36 @@ func TestChannelMerge(t *testing.T) {
 
 	webhook := policy.Webhook{
 		EventType: gitlab.EventTypeNote,
-		Event: gitlab.IssueCommentEvent{
+		Event: gitlab.CommitCommentEvent{
 			ObjectAttributes: struct {
-				ID           int            `json:"id"`
-				Note         string         `json:"note"`
-				NoteableType string         `json:"noteable_type"`
-				AuthorID     int            `json:"author_id"`
-				CreatedAt    string         `json:"created_at"`
-				UpdatedAt    string         `json:"updated_at"`
-				ProjectID    int            `json:"project_id"`
-				Attachment   string         `json:"attachment"`
-				LineCode     string         `json:"line_code"`
-				CommitID     string         `json:"commit_id"`
-				NoteableID   int            `json:"noteable_id"`
-				System       bool           `json:"system"`
-				StDiff       []*gitlab.Diff `json:"st_diff"`
-				URL          string         `json:"url"`
+				ID           int    `json:"id"`
+				Note         string `json:"note"`
+				NoteableType string `json:"noteable_type"`
+				AuthorID     int    `json:"author_id"`
+				CreatedAt    string `json:"created_at"`
+				UpdatedAt    string `json:"updated_at"`
+				ProjectID    int    `json:"project_id"`
+				Attachment   string `json:"attachment"`
+				LineCode     string `json:"line_code"`
+				CommitID     string `json:"commit_id"`
+				NoteableID   int    `json:"noteable_id"`
+				System       bool   `json:"system"`
+				StDiff       struct {
+					Diff        string `json:"diff"`
+					NewPath     string `json:"new_path"`
+					OldPath     string `json:"old_path"`
+					AMode       string `json:"a_mode"`
+					BMode       string `json:"b_mode"`
+					NewFile     bool   `json:"new_file"`
+					RenamedFile bool   `json:"renamed_file"`
+					DeletedFile bool   `json:"deleted_file"`
+				} `json:"st_diff"`
 			}{NoteableType: "Issue"},
 		},
 	}
 
 	preparedPolicies := b.preparePolicies()
-	workers := make([]<-chan policy.Policy, 3)
+	workers := make([]<-chan policy.WebhookResult, 3)
 	for i := 0; i < 3; i++ {
 		workers[i] = webhook.FilterEvent(preparedPolicies)
 	}
