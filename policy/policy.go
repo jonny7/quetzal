@@ -107,48 +107,52 @@ func (p *Policy) Validate() <-chan error {
 
 // ConditionsMet runs a series of checks against all the other conditions that make up a Policy
 // in order to report back whether a Policy's criteria is matched by the webhook and an action should occur
-func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan Policy {
-	valid := make(chan Policy)
-	checked := make(chan bool)
+func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan WebhookResult {
+	result := make(chan WebhookResult)
+	valid := make(chan bool)
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if !p.Resource.conditionMet(event) {
-			checked <- false
+			valid <- false
 			return
 		}
-		checked <- true
+		valid <- true
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if !p.Conditions.State.conditionMet(event) {
-			checked <- false
+			valid <- false
 			return
 		}
-		checked <- true
+		valid <- true
 	}()
 
 	go func() {
 		wg.Wait()
-		close(checked)
+		close(valid)
 	}()
 
+	wg.Add(1)
 	go func(correct bool) {
-		defer close(valid)
-		for result := range checked {
-			if !result {
+		defer wg.Done()
+		for r := range valid {
+			if !r {
 				correct = false
 				break
 			}
 		}
-		if correct {
-			valid <- p
-		}
+		result <- WebhookResult{Policy: p, Empty: correct}
 	}(true)
 
-	return valid
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
+
+	return result
 }
