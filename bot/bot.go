@@ -113,13 +113,13 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 		}
 
 		preparedPolicies := b.preparePolicies()
-		workers := make([]<-chan policy.Policy, runtime.NumCPU())
+		workers := make([]<-chan policy.WebhookResult, runtime.NumCPU())
 		for i := 0; i < runtime.NumCPU(); i++ {
 			workers[i] = webhook.FilterEvent(preparedPolicies)
 		}
 
 		validPolicies := mergePolicies(workers...)
-		var p []policy.Policy
+		var p []policy.WebhookResult
 		for v := range validPolicies {
 			p = append(p, v)
 		}
@@ -128,12 +128,12 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 	}
 }
 
-func mergePolicies(incoming ...<-chan policy.Policy) <-chan policy.Policy {
+func mergePolicies(incoming ...<-chan policy.WebhookResult) <-chan policy.WebhookResult {
 	var wg sync.WaitGroup
 
 	wg.Add(len(incoming))
-	outgoing := make(chan policy.Policy)
-	multiplexer := func(policies <-chan policy.Policy) {
+	outgoing := make(chan policy.WebhookResult)
+	multiplexer := func(policies <-chan policy.WebhookResult) {
 		defer wg.Done()
 		for p := range policies {
 			outgoing <- p
