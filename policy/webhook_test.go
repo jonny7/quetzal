@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func readerToPolicyChan(p string) <-chan Policy {
+func readerToPolicyChan(done <-chan struct{}, p string) <-chan Policy {
 	body, err := ioutil.ReadAll(io.NopCloser(strings.NewReader(p)))
 	if err != nil {
 		log.Fatalf("failed to load policies: %v", err)
@@ -26,13 +26,21 @@ func readerToPolicyChan(p string) <-chan Policy {
 	go func() {
 		defer close(out)
 		for _, ruleSet := range policies.Policies {
-			out <- ruleSet
+			select {
+			case <-done:
+				return
+			case out <- ruleSet:
+			}
 		}
 	}()
 	return out
 }
 
 func TestWebhook(t *testing.T) {
+	//: 16
+	done := make(chan struct{})
+	defer close(done)
+
 	hook := gitlab.MergeEvent{}
 	hook.ObjectAttributes.State = string(mergeRequestStateOpen)
 	hook.Labels = []*gitlab.Label{{Name: "api"}, {Name: "critical"}}
@@ -45,7 +53,7 @@ func TestWebhook(t *testing.T) {
       labels:
         - critical`
 
-	policyChan := readerToPolicyChan(p)
+	policyChan := readerToPolicyChan(done, p)
 
 	var results []WebhookResult
 	got := webhook.FilterEvent(policyChan)
