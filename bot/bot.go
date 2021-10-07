@@ -95,6 +95,9 @@ func (b *Bot) ping() http.HandlerFunc {
 // and bridges user specified plugins and the gitlab webhook
 func (b *Bot) processWebhook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		done := make(chan struct{})
+		defer close(done)
+
 		payload, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(500)
@@ -112,7 +115,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 			Event:     event,
 		}
 
-		preparedPolicies := b.preparePolicies()
+		preparedPolicies := b.preparePolicies(done)
 		workers := make([]<-chan policy.WebhookResult, runtime.NumCPU())
 		for i := 0; i < runtime.NumCPU(); i++ {
 			workers[i] = webhook.FilterEvent(preparedPolicies)
@@ -153,12 +156,16 @@ func mergePolicies(incoming ...<-chan policy.WebhookResult) <-chan policy.Webhoo
 }
 
 // preparePolicies creates a channel of policies to process concurrently.
-func (b *Bot) preparePolicies() <-chan policy.Policy {
+func (b *Bot) preparePolicies(done <-chan struct{}) <-chan policy.Policy {
 	out := make(chan policy.Policy)
 	go func() {
 		defer close(out)
 		for _, ruleSet := range b.Config.Policies {
-			out <- ruleSet
+			select {
+			case <-done:
+				return
+			case out <- ruleSet:
+			}
 		}
 	}()
 	return out
@@ -212,6 +219,9 @@ func (b *Bot) validatePolicies(policies <-chan policy.Policy) <-chan error {
 
 // New creates a new bot taking the config filename and path from `main`'s arguments
 func New(config Config, policies string) (*Bot, error) {
+	done := make(chan struct{})
+	defer close(done)
+
 	logger := zerolog.New(os.Stdout)
 
 	b := &Bot{
@@ -228,12 +238,12 @@ func New(config Config, policies string) (*Bot, error) {
 		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
 	}
 
-	policiesToValidate := b.preparePolicies()
+	policiesToValidate := b.preparePolicies(done)
 	workers := make([]<-chan error, runtime.NumCPU())
 	for i := 0; i < runtime.NumCPU(); i++ {
 		workers[i] = b.validatePolicies(policiesToValidate)
 	}
-	validated := mergeErrors(workers...)
+	validated := mergeErrors(done, workers...)
 
 	for v := range validated {
 		if v != nil {
@@ -247,7 +257,7 @@ func New(config Config, policies string) (*Bot, error) {
 	return b, nil
 }
 
-func mergeErrors(incoming ...<-chan error) <-chan error {
+func mergeErrors(done <-chan struct{}, incoming ...<-chan error) <-chan error {
 	var wg sync.WaitGroup
 
 	wg.Add(len(incoming))
@@ -255,7 +265,11 @@ func mergeErrors(incoming ...<-chan error) <-chan error {
 	multiplexer := func(err <-chan error) {
 		defer wg.Done()
 		for e := range err {
-			outgoing <- e
+			select {
+			case <-done:
+				return
+			case outgoing <- e:
+			}
 		}
 	}
 
