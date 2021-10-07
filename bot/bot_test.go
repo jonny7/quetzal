@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -181,6 +182,9 @@ func TestReloadInvalidPath(t *testing.T) {
 
 func TestValidatePoliciesDateProperties(t *testing.T) {
 	//: 1
+	done := make(chan struct{})
+	defer close(done)
+
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -195,7 +199,7 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
         attribute: not_a_valid_input`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
-	prep := b.preparePolicies()
+	prep := b.preparePolicies(done)
 
 	err := <-b.validatePolicies(prep)
 	if err == nil {
@@ -239,6 +243,9 @@ func TestValidatePoliciesDateProperties(t *testing.T) {
 
 func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 	//: 12,7,13,14
+	done := make(chan struct{})
+	defer close(done)
+
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -285,7 +292,7 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 		},
 	}
 
-	preparedPolicies := b.preparePolicies()
+	preparedPolicies := b.preparePolicies(done)
 	filtered := webhook.FilterEvent(preparedPolicies)
 
 	var got []policy.WebhookResult
@@ -299,6 +306,9 @@ func TestNoteConditionNoteTypeFilteredNil(t *testing.T) {
 }
 
 func TestChannelMerge(t *testing.T) {
+	done := make(chan struct{})
+	defer close(done)
+
 	b := Bot{
 		Router: chi.NewRouter(),
 		Logger: &zerolog.Logger{},
@@ -345,7 +355,7 @@ func TestChannelMerge(t *testing.T) {
 		},
 	}
 
-	preparedPolicies := b.preparePolicies()
+	preparedPolicies := b.preparePolicies(done)
 	workers := make([]<-chan policy.WebhookResult, 3)
 	for i := 0; i < 3; i++ {
 		workers[i] = webhook.FilterEvent(preparedPolicies)
@@ -359,6 +369,74 @@ func TestChannelMerge(t *testing.T) {
 	if got != 3 {
 		t.Errorf("expected 3 records when merged, but got: %d", got)
 	}
+}
+
+func TestValidPoliciesNilChan(t *testing.T) {
+	//: 1
+	done := make(chan struct{})
+	defer close(done)
+
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+  - name: assign MR
+    resource: Merge Request Hook
+    conditions:
+      state: open`
+	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+
+	prep := b.preparePolicies(done)
+
+	err := <-b.validatePolicies(prep)
+	if err != nil {
+		t.Errorf("expected an error here as `not_a_valid_input` is not valid")
+	}
+}
+
+func TestErrorChannelMerge(t *testing.T) {
+	done := make(chan struct{})
+	defer close(done)
+
+	b := Bot{
+		Router: chi.NewRouter(),
+		Logger: &zerolog.Logger{},
+		Config: &Config{Endpoint: "/webhook-endpoint"},
+	}
+
+	p := `policies:
+  - name: Assign Critical Merges to Snr Staff
+    resource: Merge Request Hook
+    conditions:
+      labels:
+        - critical`
+
+	err := b.loadPolicies(io.NopCloser(strings.NewReader(p)))
+	if err != nil {
+		t.Errorf("setup error: %v", err)
+	}
+	prep := b.preparePolicies(done)
+
+	workers := make([]<-chan error, runtime.NumCPU())
+	for i := 0; i < runtime.NumCPU(); i++ {
+		workers[i] = b.validatePolicies(prep)
+	}
+	results := mergeErrors(done, workers...)
+
+	idx := 0
+	for r := range results {
+		if idx > 0 {
+			t.Errorf("expected only 1 record returned")
+		}
+		if r != nil {
+			t.Errorf("expected r to be nil as policy is valid")
+		}
+		idx++
+	}
+
 }
 
 //func TestNotableTypeFilter(t *testing.T) {
