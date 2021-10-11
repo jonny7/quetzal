@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	var user, token, policies, botServer, endpoint, secret string
+	var user, token, policies, botServer, endpoint, secret, host string
 	var port int
 	var dry, version bool
 
@@ -18,7 +18,8 @@ func main() {
 	flag.StringVar(&token, "token", "", "The personal access token for the stated user")
 	flag.StringVar(&botServer, "bot-server", "", "The base URL the bot lives on")
 	flag.StringVar(&endpoint, "webhook-endpoint", "/webhook-endpoint", "The webhook endpoint")
-	flag.StringVar(&secret, "", "", "(optional) webhook secret ")
+	flag.StringVar(&secret, "webhook-secret", "", "(optional) webhook secret")
+	flag.StringVar(&host, "gitlab-host", "https://gitlab.com", "The GitLab host URL")
 	flag.IntVar(&port, "port", 7838, "The port the bot listens on")
 	flag.BoolVar(&dry, "dry-run", false, "don't perform any actions, just print out the actions that would be taken if live")
 	flag.StringVar(&policies, "policies", "./examples/.policies.yaml", "The relative path to the policies file")
@@ -36,6 +37,7 @@ func main() {
 		BotServer:  botServer,
 		Endpoint:   endpoint,
 		Secret:     secret,
+		Host:       host,
 		Port:       fmt.Sprintf(":%d", port),
 		PolicyPath: policies,
 		DryRun:     dry,
