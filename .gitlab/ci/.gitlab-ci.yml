@@ -31,8 +31,8 @@ requirements:check:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - go install gitlab.com/jonny7/gitlab-matrix-generator
-    - go build -o matrix ./cmd
+    - go get -u gitlab.com/jonny7/gitlab-matrix-generator
+    - go build -o matrix gitlab.com/jonny7/gitlab-matrix-generator/cmd
     - ./matrix
   dependencies:
     - quetzal:test
