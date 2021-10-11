@@ -7,20 +7,6 @@ type MergeEventAdaptor struct {
 	gitlab.MergeEvent
 }
 
-// gitLabUpdateFn is allows for possible multiple action requests to
-// be stacked up and executed as part of an array
-type gitLabUpdateFn func(action Action, client *gitlab.Client) (string, error)
-
-// GitLabUpdateResult reports back to the caller the series of events taken
-// by the bot to update Gitlab
-type GitLabUpdateResult struct {
-	action Action
-	// here we collect the endpoint being called from the client to help provide
-	// more info, without using reflection on a func to get the func name
-	endpoint string
-	error    error
-}
-
 // prepare updates goes through the action list and determines what update requests are required.
 func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn
