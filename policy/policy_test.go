@@ -2,73 +2,44 @@ package policy
 
 import (
 	"github.com/xanzy/go-gitlab"
-	"strings"
 	"testing"
 )
 
-func TestDateValidationIntegration(t *testing.T) {
-	//: 1
-	p := Policy{
-		Resource: Resource{
-			EventType: gitlab.EventTypeNote,
-		},
-		Conditions: Condition{
-			Date: &Date{
-				Attribute: "nothing",
-			},
-		},
+// Policy conforms to the matcher interface and is parent
+// function that runs each condition and sub-conditions matcher function
+// When a new matching element is added, say `Labels`.
+// This will need to be updated to reflect that
+func TestPolicyMatcher(t *testing.T) {
+	//: 3
+	policy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
+	data := []struct {
+		name     string
+		hook     Webhook
+		policy   Policy
+		expected bool
+		errMsg   string
+	}{
+		{name: "Matched Policy", hook: Webhook{EventType: gitlab.EventTypeMergeRequest}, policy: policy, expected: true, errMsg: "expected true as policy and hook have the same resource type"},
+		{name: "Unmatched Policy", hook: Webhook{EventType: gitlab.EventTypeIssue}, policy: policy, expected: false, errMsg: "expected false as policy and hook do not have the same resource type"},
 	}
-
-	got := <-p.Validate()
-	if got == nil {
-		t.Errorf("expected an error for invalid yaml date")
-	}
-}
-
-func TestResourceValidationIntegration(t *testing.T) {
-	//: 6
-	p := Policy{
-		Resource: Resource{
-			EventType: gitlab.EventType("Not A Hook"),
-		},
-	}
-
-	got := <-p.Validate()
-	if !strings.Contains(got.Error(), "`policy:resource` allowed options are:") {
-		t.Errorf("expected an error for invalid yaml resource")
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			got := d.policy.matcher(d.hook)
+			if got != d.expected {
+				t.Errorf(d.errMsg)
+			}
+		})
 	}
 }
 
-func TestStateValidationIntegration(t *testing.T) {
-	//: 15,17
-	p := Policy{
-		Resource: Resource{
-			EventType: gitlab.EventTypeMergeRequest,
-		},
-		Conditions: Condition{
-			State: &State{"invalid"},
-		},
-	}
+// similar to above this should be updated when more functionality is added to give a more extensive check of
+// policy validation
+func TestPolicyValidator(t *testing.T) {
+	//: 7
+	policy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
 
-	got := <-p.Validate()
-	if !strings.Contains(got.Error(), "available states for Merge Requests are") {
-		t.Errorf("expected an error for invalid yaml state")
-	}
-}
-
-func TestMilestoneValidationIntegration(t *testing.T) {
-	//: 18
-	p := Policy{
-		Resource: Resource{
-			EventType: gitlab.EventTypeMergeRequest,
-		},
-		Conditions: Condition{
-			Milestone: &Milestone{0},
-		},
-	}
-
-	got := <-p.Validate()
-	if got == nil {
-		t.Errorf("expected an error for invalid yaml state")
+	got := policy.Validate()
+	if got != nil {
+		t.Errorf("expected this to be nil as policy:resource is valid")
 	}
 }
