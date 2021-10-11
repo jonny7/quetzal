@@ -1,8 +1,6 @@
 package policy
 
-import (
-	"github.com/xanzy/go-gitlab"
-)
+import "github.com/xanzy/go-gitlab"
 
 // Webhook is a wrapper around the incoming webhook
 type Webhook struct {
@@ -13,32 +11,25 @@ type Webhook struct {
 }
 
 type WebhookResult struct {
-	Policy Policy
-	Empty  bool
+	policy  Policy
+	actions []GitLabUpdateResult
 }
 
-// FilterEvent processing policies against the incoming hook and only returns policies
-// that are valid for this webhook Event.
-func (w *Webhook) FilterEvent(in <-chan Policy) <-chan WebhookResult {
-	validPolicies := make(chan WebhookResult)
+func (w *Webhook) FilterEvent(in <-chan Policy, client *gitlab.Client) <-chan WebhookResult {
+	processed := make(chan WebhookResult)
 	go func() {
 		for pol := range in {
+			result := WebhookResult{policy: pol}
 			switch ev := w.Event.(type) {
-			case gitlab.CommitCommentEvent:
-				cce := CommitCommentEventAdaptor{ev}
-				validPolicies <- <-pol.ConditionsMet(cce)
 			case gitlab.MergeEvent:
 				me := MergeEventAdaptor{ev}
-				validPolicies <- <-pol.ConditionsMet(me)
-			// @todo these fail to be decoded when using the payload from GitLab docs
-			case gitlab.MergeCommentEvent:
-			case gitlab.SnippetCommentEvent:
-			case gitlab.WikiPageEvent:
-				we := WikiEventAdaptor{ev}
-				validPolicies <- <-pol.ConditionsMet(we)
+				if pol.matcher(*w) {
+					result.actions = me.execute(pol.Actions, client)
+				}
+				processed <- result
 			}
 		}
-		close(validPolicies)
+		close(processed)
 	}()
-	return validPolicies
+	return processed
 }

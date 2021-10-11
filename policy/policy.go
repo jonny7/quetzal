@@ -1,16 +1,20 @@
 package policy
 
-import (
-	"fmt"
-	"github.com/xanzy/go-gitlab"
-	"sync"
-)
+// fieldValidator ensures that a field or entire struct
+// has valid user specified input
+type fieldValidator interface {
+	validate() error
+}
 
-// Validator provides a method to validate a struct
-// created from a yaml config file, most types
-// are backed by strings, which means that value can
-// be passed in the .yml file. Validate confirms these are
-// permitted values
+// matcher checks that a Policy and Webhook match
+// essentially confirming that the incoming hook has specifications
+// that are listed in the Policy
+type matcher interface {
+	matcher(hook Webhook) bool
+}
+
+// Validator allows the Policies to be checked for invalid
+// or incompatible instructions
 type Validator interface {
 	Validate() error
 }
@@ -23,136 +27,168 @@ type Policies struct {
 // Policy is a containing struct that identifies the
 // required policy for a certain webhook
 type Policy struct {
-	Name       string    `yaml:"name,omitempty"`
+	Name       string    `yaml:"name"`
+	ProjectId  int       `yaml:"projectId"`
 	Resource   Resource  `yaml:",inline"`
 	Conditions Condition `yaml:"conditions,omitempty"`
-	Limit      *Limit    `yaml:"limit,omitempty"`
-	Actions    *Action   `yaml:"actions,omitempty"`
+	//Limit      *Limit    `yaml:"limit,omitempty"` @todo
+	Actions Action `yaml:"actions,omitempty"`
 }
 
-// Resource embeds a gitlab.EventType
-type Resource struct {
-	EventType gitlab.EventType `yaml:"resource"`
-}
-
-// validate confirms that a user specified resource is a valid type
-func (r Resource) validate() error {
-	switch r.EventType {
-	case gitlab.EventTypeBuild, gitlab.EventTypeDeployment, gitlab.EventTypeIssue, gitlab.EventConfidentialIssue, gitlab.EventTypeJob, gitlab.EventTypeMergeRequest, gitlab.EventTypeNote, gitlab.EventConfidentialNote, gitlab.EventTypePipeline, gitlab.EventTypePush, gitlab.EventTypeRelease, gitlab.EventTypeSystemHook, gitlab.EventTypeTagPush, gitlab.EventTypeWikiPage:
-		return nil
+func (p Policy) matcher(hook Webhook) bool {
+	if p.Resource.EventType != hook.EventType {
+		return false
 	}
-	return fmt.Errorf("`policy:resource` allowed options are: `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`. But received: %v", gitlab.EventTypeBuild,
-		gitlab.EventTypeDeployment,
-		gitlab.EventTypeIssue,
-		gitlab.EventConfidentialIssue,
-		gitlab.EventTypeJob,
-		gitlab.EventTypeMergeRequest,
-		gitlab.EventTypeNote,
-		gitlab.EventConfidentialNote,
-		gitlab.EventTypePipeline,
-		gitlab.EventTypePush,
-		gitlab.EventTypeRelease,
-		gitlab.EventTypeSystemHook,
-		gitlab.EventTypeTagPush,
-		gitlab.EventTypeWikiPage, r.EventType)
+	return true
 }
 
-// conditionMet returns whether this webhook matches a policy resource type
-func (r Resource) conditionMet(event GitLabAdaptor) bool {
-	return r.EventType == event.ResourceType()
+// Validate validates a Policy's correctness
+func (p Policy) Validate() error {
+	if err := p.Resource.validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
-// Validate houses a series of validation checks on the
-// user specified yaml.
-func (p *Policy) Validate() <-chan error {
-	ch := make(chan error)
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := p.Resource.validate(); err != nil {
-			ch <- err
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := p.Conditions.Date.validateAll(); err != nil {
-			ch <- err
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := p.Conditions.State.validate(p.Resource.EventType); err != nil {
-			ch <- err
-		}
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := p.Conditions.Milestone.validate(); err != nil {
-			ch <- err
-		}
-	}()
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-	return ch
+// Condition declares what properties and states are required by
+// the webhook to have an action performed on it
+type Condition struct {
+	// Date is a struct to manage date related entries
+	Date *Date `yaml:"date,omitempty"`
+	// State is the expected state of the webhook event
+	State *State `yaml:",inline,omitempty"`
+	// Milestone is the milestone of the issue
+	Milestone *Milestone `yaml:",inline,omitempty"`
+	// Labels provides an array of required labels for the condition to be met
+	Labels Labels `yaml:",inline,omitempty"`
+	// ForbiddenLabels is an array of labels to not trigger the condition
+	ForbiddenLabels ForbiddenLabels `yaml:",inline,omitempty"`
+	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
+	//Discussion *Discussion `yaml:"discussion,omitempty"` @todo
+	// Note is the contents of a given note/comment on various different events like commit, mr, issue, code snippet
+	Note *Note `yaml:"note"`
 }
 
-// ConditionsMet runs a series of checks against all the other conditions that make up a Policy
-// in order to report back whether a Policy's criteria is matched by the webhook and an action should occur
-func (p Policy) ConditionsMet(event GitLabAdaptor) <-chan WebhookResult {
-	result := make(chan WebhookResult)
-	valid := make(chan bool)
-	var wg sync.WaitGroup
+// Date is possible condition that can be used to allow or
+// disallow the behaviour of the Bot see `config.yaml`
+type Date struct {
+	// Attribute can be `created_at` or `updated_at`
+	Attribute DateAttribute `yaml:"attribute"`
+	// Condition can be `older_than` or `newer_than`
+	Condition DateCondition `yaml:"condition"`
+	// IntervalType can be `days`, `weeks`, `months`, `years`
+	IntervalType DateIntervalType `yaml:"intervalType"`
+	// Interval is a numeric representation of the `IntervalType`
+	Interval int `yaml:"interval"`
+}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if !p.Resource.conditionMet(event) {
-			valid <- false
-			return
-		}
-		valid <- true
-	}()
+// DateAttribute is the updated or created property
+type DateAttribute string
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if !p.Conditions.State.conditionMet(event) {
-			valid <- false
-			return
-		}
-		valid <- true
-	}()
+const (
+	createdAt DateAttribute = "created_at"
+	updatedAt DateAttribute = "updated_at"
+)
 
-	go func() {
-		wg.Wait()
-		close(valid)
-	}()
+// DateCondition is the greater than or less than [date] filter
+type DateCondition string
 
-	wg.Add(1)
-	go func(correct bool) {
-		defer wg.Done()
-		for r := range valid {
-			if !r {
-				correct = false
-				break
-			}
-		}
-		result <- WebhookResult{Policy: p, Empty: correct}
-	}(true)
+const (
+	olderThan DateCondition = "older_than"
+	newerThan DateCondition = "newer_than"
+)
 
-	go func() {
-		wg.Wait()
-		close(result)
-	}()
+// DateIntervalType is the type of available interval
+type DateIntervalType string
 
-	return result
+const (
+	days   DateIntervalType = "days"
+	weeks  DateIntervalType = "weeks"
+	months DateIntervalType = "months"
+	years  DateIntervalType = "years"
+)
+
+// State represents the webhook state, this is only available
+// on certain events
+type State struct {
+	State string `yaml:"state"`
+}
+
+// mergeRequestState represents the possible states a merge request can be in
+type mergeRequestState string
+
+const (
+	mergeRequestStateOpen       mergeRequestState = "open"
+	mergeRequestStateClose      mergeRequestState = "close"
+	mergeRequestStateReopen     mergeRequestState = "reopen"
+	mergeRequestStateUpdate     mergeRequestState = "update"
+	mergeRequestStateApproved   mergeRequestState = "approved"
+	mergeRequestStateUnApproved mergeRequestState = "unapproved"
+	mergeRequestStateMerge      mergeRequestState = "merge"
+)
+
+// issueState represents the possible states an issue can be in
+type issueState string
+
+const (
+	issueStateOpen   issueState = "open"
+	issueStateClose  issueState = "close"
+	issueStateReopen issueState = "reopen"
+	issueStateUpdate issueState = "update"
+)
+
+// releaseState represents the possible states an releaseState can be in
+type releaseState string
+
+const (
+	releaseStateCreate releaseState = "create"
+	releaseStateUpdate releaseState = "update"
+)
+
+// Milestone represents the integer id from GitLab
+type Milestone struct {
+	Milestone int `yaml:"milestone"`
+}
+
+// Labels represent the required labels policy condition
+type Labels struct {
+	labels []string `yaml:"labels"`
+}
+
+// ForbiddenLabels represent any label that should exclude the webhook
+// if present
+type ForbiddenLabels struct {
+	forbiddenLabels []string `yaml:"forbiddenLabels"`
+}
+
+// NoteType is the type of note: Commit, MergeRequest, Issue, Snippet
+type NoteType string
+
+// Mentions is an array of users mentioned in a comment
+type Mentions []string
+
+// Command is a string backed type for a given command to respond to
+type Command string
+
+const (
+	// NoteCommit are comments on Commits
+	NoteCommit NoteType = "Commit"
+	// NoteMergeRequest are comments on MergeRequests
+	NoteMergeRequest NoteType = "MergeRequest"
+	// NoteIssue are comments on Issues
+	NoteIssue NoteType = "Issue"
+	// NoteSnippet are comments on Snippets
+	NoteSnippet NoteType = "Snippet"
+)
+
+// Note represents a GitLab Note, which is essentially a comment on
+// a series of different scenarios and event types
+type Note struct {
+	// Type is the NoteType of the note from GitLab. If you need to narrow down
+	// the type of note then use this, if left blank, then it will apply to all note types
+	Type *NoteType `yaml:"noteType"`
+	// Mentions looks for user's mentioned in the note
+	Mentions Mentions `yaml:"mentions"`
+	// Command is the specified string to look for if needed.
+	Command Command `yaml:"command"`
 }

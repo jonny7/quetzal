@@ -1,41 +1,29 @@
 package policy
 
-import (
-	"github.com/xanzy/go-gitlab"
-)
+import "github.com/xanzy/go-gitlab"
 
-// Stater returns the state of an event if possible
-type Stater interface {
-	State() (*string, error)
+// gitLabUpdateFn is allows for possible multiple action requests to
+// be stacked up and executed as part of an array
+type gitLabUpdateFn func(action Action, client *gitlab.Client) (string, error)
+
+// GitLabUpdateResult reports back to the caller the series of events taken
+// by the bot to update Gitlab
+type GitLabUpdateResult struct {
+	action Action
+	// here we collect the endpoint being called from the client to help provide
+	// more info, without using reflection on a func to get the func name
+	endpoint string
+	error    error
 }
 
-// Resourcer returns the type of resource
-type Resourcer interface {
-	ResourceType() gitlab.EventType
-}
-
-// Milestoner returns the milestone if possible or error
-type Milestoner interface {
-	Milestone() (*int, error)
-}
-
-// Labeler returns the labels if available
-type Labeler interface {
-	Labels() ([]string, error)
-}
-
-// Noter returns information about the Note and NoteType
-type Noter interface {
-	Note() (*string, error)
-	Mentions() []string
-	NoteType() (*string, error)
-}
-
-// GitLabAdaptor wraps all the events
+// GitLabAdaptor wraps the incoming hook so
+// additional methods can be added
 type GitLabAdaptor interface {
-	Stater
-	Resourcer
-	Milestoner
-	Labeler
-	Noter
+	Executor
+}
+
+// Executor is how the updates to GitLab are done on a per-type basis
+type Executor interface {
+	prepareUpdates(action Action) []gitLabUpdateFn
+	execute(action Action, client *gitlab.Client) []GitLabUpdateResult
 }
