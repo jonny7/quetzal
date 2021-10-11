@@ -16,7 +16,7 @@ quetzal:test:
   stage: test
   script:
     - go vet $(go list ./... | grep -v /vendor/)
-    - go test -v $(go list ./... | grep -v /internal/cmd/matrix) -race -covermode=atomic -coverprofile=coverage.out
+    - go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
     - go install github.com/jstemmer/go-junit-report@latest
     - go test -v ./... 2>&1 | go-junit-report > report.xml
   artifacts:
@@ -31,7 +31,8 @@ requirements:check:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - go build -o matrix ./internal/cmd/matrix
+    - go install gitlab.com/jonny7/gitlab-matrix-generator
+    - go build -o matrix ./cmd
     - ./matrix
   dependencies:
     - quetzal:test

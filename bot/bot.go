@@ -26,6 +26,7 @@ type Config struct {
 	BotServer  string
 	Endpoint   string
 	Secret     string
+	Host       string
 	Port       string
 	PolicyPath string
 	DryRun     bool
@@ -37,6 +38,7 @@ type Bot struct {
 	Router *chi.Mux
 	Logger *zerolog.Logger
 	Config *Config
+	Client *gitlab.Client
 }
 
 // Message provides a simple message struct for times you need some
@@ -118,7 +120,7 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 		preparedPolicies := b.preparePolicies(done)
 		workers := make([]<-chan policy.WebhookResult, runtime.NumCPU())
 		for i := 0; i < runtime.NumCPU(); i++ {
-			workers[i] = webhook.FilterEvent(preparedPolicies)
+			workers[i] = webhook.FilterEvent(preparedPolicies, b.Client)
 		}
 
 		validPolicies := mergePolicies(workers...)
@@ -129,6 +131,15 @@ func (b *Bot) processWebhook() http.HandlerFunc {
 
 		render.Respond(w, r, p)
 	}
+}
+
+func (b *Bot) newClient() error {
+	client, err := gitlab.NewClient(b.Config.Token, gitlab.WithBaseURL(b.Config.Host))
+	if err != nil {
+		return err
+	}
+	b.Client = client
+	return nil
 }
 
 func mergePolicies(incoming ...<-chan policy.WebhookResult) <-chan policy.WebhookResult {
@@ -210,7 +221,7 @@ func (b *Bot) validatePolicies(policies <-chan policy.Policy) <-chan error {
 	ch := make(chan error)
 	go func() {
 		for p := range policies {
-			ch <- <-p.Validate()
+			ch <- p.Validate()
 		}
 		close(ch)
 	}()
