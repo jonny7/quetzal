@@ -31,3 +31,15 @@ func TestPolicyMatcher(t *testing.T) {
 		})
 	}
 }
+
+// similar to above this should be updated when more functionality is added to give a more extensive check of
+// policy validation
+func TestPolicyValidator(t *testing.T) {
+	//: 7
+	policy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
+
+	got := policy.Validate()
+	if got != nil {
+		t.Errorf("expected this to be nil as policy:resource is valid")
+	}
+}

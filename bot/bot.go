@@ -265,6 +265,12 @@ func New(config Config, policies string) (*Bot, error) {
 	b.Router.Use(render.SetContentType(render.ContentTypeJSON))
 	b.Router.Use(middleware.Recoverer)
 	b.routes(b.Router)
+
+	err = b.newClient()
+	if err != nil {
+		b.Logger.Fatal().Msg(fmt.Sprintf("gitlab client couldn't be established: %v", err))
+	}
+
 	return b, nil
 }
 
