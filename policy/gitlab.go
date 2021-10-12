@@ -9,21 +9,26 @@ type gitLabUpdateFn func(action Action, client *gitlab.Client) (string, error)
 // GitLabUpdateResult reports back to the caller the series of events taken
 // by the bot to update Gitlab
 type GitLabUpdateResult struct {
-	action Action
-	// here we collect the endpoint being called from the client to help provide
+	Action Action `json:"action"`
+	// here we collect the Endpoint being called from the client to help provide
 	// more info, without using reflection on a func to get the func name
-	endpoint string
-	error    error
+	Endpoint string `json:"endpoint"`
+	Error    string `json:"error"`
 }
 
-// GitLabAdaptor wraps the incoming hook so
-// additional methods can be added
+// GitLabAdaptor wraps the incoming hook so additional methods can be added
 type GitLabAdaptor interface {
 	Executor
+	Stater
 }
 
 // Executor is how the updates to GitLab are done on a per-type basis
 type Executor interface {
 	prepareUpdates(action Action) []gitLabUpdateFn
 	execute(action Action, client *gitlab.Client) []GitLabUpdateResult
+}
+
+// Stater gets the state if available from a GitLab Webhook
+type Stater interface {
+	state() *string
 }

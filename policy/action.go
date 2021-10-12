@@ -25,7 +25,7 @@ type Action struct {
 func (a Action) commentate() string {
 	var out string
 	for _, m := range a.Mention {
-		out += m + " "
+		out += fmt.Sprintf("@%s ", m)
 	}
 	if len(a.Mention) == 0 {
 		return a.Comment
