@@ -34,7 +34,7 @@ func TestAddNote(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "No Mentions or Comments", action: Action{}, expected: false, errMsg: "expected false as Comments and Mentions are empty"},
-		{name: "Mentions but no Comments", action: Action{Mention: []string{"@jonny"}}, expected: true, errMsg: "expected true as Mentions are not empty"},
+		{name: "Mentions but no Comments", action: Action{Mention: []string{"jonny"}}, expected: true, errMsg: "expected true as Mentions are not empty"},
 		{name: "Comments but no Mentions", action: Action{Comment: "I am commenting"}, expected: true, errMsg: "expected true as Comment is not empty"},
 	}
 	for _, d := range data {
@@ -55,8 +55,8 @@ func TestCommentCreationOnAdaptor(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "build comment with no mentions", action: Action{Comment: "GitLab"}, expected: "GitLab", errMsg: "expected %s but got %s"},
-		{name: "build comment with 1 mention", action: Action{Comment: "GitLab", Mention: []string{"@jonny"}}, expected: "@jonny GitLab", errMsg: "expected %s but got %s"},
-		{name: "build comment with 2 mentions", action: Action{Comment: "GitLab", Mention: []string{"@jonny", "@bot"}}, expected: "@jonny @bot GitLab", errMsg: "expected %s but got %s"},
+		{name: "build comment with 1 mention", action: Action{Comment: "GitLab", Mention: []string{"jonny"}}, expected: "@jonny GitLab", errMsg: "expected %s but got %s"},
+		{name: "build comment with 2 mentions", action: Action{Comment: "GitLab", Mention: []string{"jonny", "bot"}}, expected: "@jonny @bot GitLab", errMsg: "expected %s but got %s"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {

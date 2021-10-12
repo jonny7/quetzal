@@ -11,20 +11,20 @@ type Webhook struct {
 }
 
 type WebhookResult struct {
-	policy  Policy
-	actions []GitLabUpdateResult
+	Policy  Policy               `json:"policy"`
+	Actions []GitLabUpdateResult `json:"actions"`
 }
 
 func (w *Webhook) FilterEvent(in <-chan Policy, client *gitlab.Client) <-chan WebhookResult {
 	processed := make(chan WebhookResult)
 	go func() {
 		for pol := range in {
-			result := WebhookResult{policy: pol}
+			result := WebhookResult{Policy: pol}
 			switch ev := w.Event.(type) {
-			case gitlab.MergeEvent:
-				me := MergeEventAdaptor{ev}
-				if pol.matcher(*w) {
-					result.actions = me.execute(pol.Actions, client)
+			case *gitlab.MergeEvent:
+				me := MergeEventAdaptor{*ev}
+				if pol.matcher(w.EventType, me) {
+					result.Actions = me.execute(pol.Actions, client)
 				}
 				processed <- result
 			}

@@ -58,12 +58,12 @@ func TestWebhookFilter(t *testing.T) {
 		expectedActions    int
 		expectedEndPoint   string
 	}{
-		{name: "Webhook that makes 1 update to GitLab", policy: oneUpdate, hook: Webhook{EventType: gitlab.EventTypeMergeRequest, Event: mergeEvent}, expectedPolicyName: oneUpdate.Name, expectedActions: 1},
-		{name: "Webhook that makes 2 update to GitLab", policy: twoUpdates, hook: Webhook{EventType: gitlab.EventTypeMergeRequest, Event: mergeEvent}, expectedPolicyName: twoUpdates.Name, expectedActions: 2},
+		{name: "Webhook that makes 1 update to GitLab", policy: oneUpdate, hook: Webhook{EventType: gitlab.EventTypeMergeRequest, Event: &mergeEvent}, expectedPolicyName: oneUpdate.Name, expectedActions: 1},
+		{name: "Webhook that makes 2 update to GitLab", policy: twoUpdates, hook: Webhook{EventType: gitlab.EventTypeMergeRequest, Event: &mergeEvent}, expectedPolicyName: twoUpdates.Name, expectedActions: 2},
 		// this uses a non-possible eventType, purely so the filter simulates a webhook and policy that match, but would fail
 		// at some point in the conditions checks, as only one check is in place EventType, it manufactures this failure
 		// to handle a nil result on the channel. This can be replaced when condition checks are built
-		{name: "Webhook that is the correct type but policy, but doesn't match", policy: twoUpdates, hook: Webhook{EventType: gitlab.EventTypeIssue, Event: mergeEvent}, expectedPolicyName: "", expectedActions: 0},
+		{name: "Webhook that is the correct type but policy, but doesn't match", policy: twoUpdates, hook: Webhook{EventType: gitlab.EventTypeIssue, Event: &mergeEvent}, expectedPolicyName: "", expectedActions: 0},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -73,12 +73,12 @@ func TestWebhookFilter(t *testing.T) {
 				ch <- d.policy
 			}()
 			got := <-d.hook.FilterEvent(ch, client)
-			if got.policy.Name != d.policy.Name {
+			if got.Policy.Name != d.policy.Name {
 				t.Errorf("expected policy name to be: %s", d.policy.Name)
 			}
 
-			if len(got.actions) != d.expectedActions {
-				t.Errorf("expected filter to return 1 updated function, but got %d", len(got.actions))
+			if len(got.Actions) != d.expectedActions {
+				t.Errorf("expected filter to return 1 updated function, but got %d", len(got.Actions))
 			}
 		})
 	}

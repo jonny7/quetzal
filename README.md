@@ -8,7 +8,7 @@ Quetzal is a GitLab bot written in Go. It takes inspiration from the `GitLab Tri
 ## Installation
 The easiest way is using Docker.
 ```shell
-docker run --name my-quetzal -v /path/to/.policies.yaml:/path/to/.policies.yaml:ro -d -p 7838:7838 jonny7/quetzal 
+docker run --name my-quetzal -v '/path/to/.policies.yaml:/.policies.yaml:ro' -e user="GitLab.User" -e token="your-token" -e bot="https://bot-server.com" -e host="https://custom-gitlab-instance.com" -e policies="./.policies.yaml" -d -p 7838:7838 jonny7/quetzal 
 ```
 
 However, you can build the source yourself
@@ -16,29 +16,28 @@ However, you can build the source yourself
 go build -o quetzal ./cmd/quetzal
 ```
 
-#### Usage
-```shell
-./quetzal -h
-Usage of ./quetzal:
-  - string
-        (optional) webhook secret 
-  -bot-server string
-        The base URL the bot lives on
-  -dry-run
-        don't perform any actions, just print out the actions that would be taken if live
-  -policies string
-        The relative path to the policies file (default "./examples/.policies.yaml")
-  -port int
-        The port the bot listens on (default 7838)
-  -token string
-        The personal access token for the stated user
+#### Environment Vars
+```
   -user string
-        The Gitlab user this bot will act as
-  -version
-        display version of quetzal
-  -webhook-endpoint string
-        The webhook endpoint (default "/webhook-endpoint")
-
+        the bot user (default "")
+  -token string
+        The personal access token for the bot (default "")
+  -bot string
+        The url the bot lives on eg https://your-domain.com (default "")
+  -webhook string
+        The endpoint to accept webhooks from (default "/webhook-endpoint")
+  -secret string
+        The webhook secret (default "")
+  -host string
+        The Gitlab instance (default "https://gitlab.com")
+  -port string
+        specified port (default "7838")
+  -dry bool
+        Whether to run quetzal as a dry-run that doesn't perform actions against GitLab (default false)
+  -policies string
+        The path to the policies file (default "./examples/.policies.yaml")
+  -version bool
+        Return the version of Quetzal (default false)
 ```
 
 #### Versioning
