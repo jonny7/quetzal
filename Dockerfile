@@ -17,4 +17,4 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/gitlab.com/jonny7/quetzal/quetzal ./quetzal
 
-CMD ["./main"]
+CMD ["./quetzal"]

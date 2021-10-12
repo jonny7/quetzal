@@ -8,7 +8,7 @@ Quetzal is a GitLab bot written in Go. It takes inspiration from the `GitLab Tri
 ## Installation
 The easiest way is using Docker.
 ```shell
-docker run --name my-quetzal -d -p 7838:7838 jonny7/quetzal 
+docker run --name my-quetzal -v /path/to/.policies.yaml:/path/to/.policies.yaml:ro -d -p 7838:7838 jonny7/quetzal 
 ```
 
 However, you can build the source yourself
