@@ -27,8 +27,3 @@ type Executor interface {
 	prepareUpdates(action Action) []gitLabUpdateFn
 	execute(action Action, client *gitlab.Client) []GitLabUpdateResult
 }
-
-// Stater gets the state if available from a GitLab Webhook
-type Stater interface {
-	state() *string
-}

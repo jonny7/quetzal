@@ -244,12 +244,10 @@ func New(config Config, policies string) (*Bot, error) {
 
 	p, err := createReader(policies)
 	if err != nil {
-		b.Logger.Error().Msg(fmt.Sprintf("an error occurred creating a reader for the policy file: %v", err))
-		return nil, err
+		b.Logger.Fatal().Msg(fmt.Sprintf("an error occurred creating a reader for the policy file: %v", err))
 	}
 	if err = b.loadPolicies(p); err != nil {
-		b.Logger.Error().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
-		return nil, err
+		b.Logger.Fatal().Msg(fmt.Sprintf("policies couldn't be loaded: %v", err))
 	}
 
 	policiesToValidate := b.preparePolicies(done)
@@ -262,7 +260,6 @@ func New(config Config, policies string) (*Bot, error) {
 	for v := range validated {
 		if v != nil {
 			b.Logger.Fatal().Msg(fmt.Sprintf("invalid policy: %v", v))
-			return nil, err
 		}
 	}
 
