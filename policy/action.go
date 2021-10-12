@@ -46,23 +46,3 @@ func (a Action) addNote() bool {
 	}
 	return false
 }
-
-//func (a Action) buildResult()
-//// returns... The type of object for update, so will need an interace maybe.
-//// We know the action, but not at compile time.
-//// so need an interface
-//// filterEvent, we get the type, the policy checks conditions returns a bool
-//// if true GitlabAdaptorType.Execute(Actioner interface, client *gitlab.Client)
-///*
-//We set MergeRequest's status and labels and use the client.MergeRequest.Update() to send
-//Have look to look at how the Mention and comment work, it might not be possible on all types
-//roll all Policy Actions into one action. Maybe there is no comment ona type
-//
-//So ultimately, need to validate that a Policy Resource can have a certain action taken
-// */
-// */
-// */
-// */
-//*/
-//
-//}
