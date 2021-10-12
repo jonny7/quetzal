@@ -94,7 +94,12 @@ func TestPolicies(t *testing.T) {
   - name: dummy policy
     resource: Issue Hook
   - name: respond to mention
-    resource: Note Hook`
+    resource: Note Hook
+    actions:
+      mention:
+        - jonny7
+      comment: |
+        Closing this issue, thanks for the fix {{author}}`
 	_ = b.loadPolicies(io.NopCloser(strings.NewReader(p)))
 
 	b.routes(b.Router)
@@ -111,6 +116,10 @@ func TestPolicies(t *testing.T) {
 
 	if len(msg) != 2 {
 		t.Errorf("expected 2 policies returned, but got: %v", err)
+	}
+
+	if msg[1].Actions.Mention[0] != "jonny7" {
+		t.Errorf("expected mention to contain this user, got: %s", msg[1].Actions.Mention[0])
 	}
 }
 

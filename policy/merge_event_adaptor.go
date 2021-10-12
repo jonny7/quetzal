@@ -7,6 +7,11 @@ type MergeEventAdaptor struct {
 	gitlab.MergeEvent
 }
 
+func (m MergeEventAdaptor) state() *string {
+	a := m.ObjectAttributes.Action
+	return &a //&m.ObjectAttributes.Action
+}
+
 // prepare updates goes through the action list and determines what update requests are required.
 func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn
@@ -23,13 +28,13 @@ func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
 func (m MergeEventAdaptor) execute(action Action, client *gitlab.Client) []GitLabUpdateResult {
 	updates := m.prepareUpdates(action)
 	var updateResults []GitLabUpdateResult
-	for _, u := range updates {
-		endpoint, err := u(action, client)
-		updateResults = append(updateResults, GitLabUpdateResult{
-			action:   action,
-			endpoint: endpoint,
-			error:    err,
-		})
+	for _, update := range updates {
+		endpoint, err := update(action, client)
+		result := GitLabUpdateResult{Action: action, Endpoint: endpoint}
+		if err != nil {
+			result.Error = err.Error()
+		}
+		updateResults = append(updateResults, result)
 	}
 	return updateResults
 }

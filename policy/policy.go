@@ -1,5 +1,7 @@
 package policy
 
+import "github.com/xanzy/go-gitlab"
+
 // fieldValidator ensures that a field or entire struct
 // has valid user specified input
 type fieldValidator interface {
@@ -35,16 +37,29 @@ type Policy struct {
 	Actions Action `yaml:"actions,omitempty"`
 }
 
-func (p Policy) matcher(hook Webhook) bool {
-	if p.Resource.EventType != hook.EventType {
+func (p Policy) matcher(eventType gitlab.EventType, adaptor GitLabAdaptor) bool {
+	if p.Resource.EventType != eventType {
 		return false
 	}
+	// state is optional in condition
+	if p.Conditions.State.state() != nil {
+		if *p.Conditions.State.state() != *adaptor.state() {
+			return false
+		}
+	}
 	return true
+}
+
+func (p Policy) state() *string {
+	return p.Conditions.State.state()
 }
 
 // Validate validates a Policy's correctness
 func (p Policy) Validate() error {
 	if err := p.Resource.validate(); err != nil {
+		return err
+	}
+	if err := p.Conditions.State.validate(p.Resource.EventType); err != nil {
 		return err
 	}
 	return nil
@@ -106,25 +121,6 @@ const (
 	weeks  DateIntervalType = "weeks"
 	months DateIntervalType = "months"
 	years  DateIntervalType = "years"
-)
-
-// State represents the webhook state, this is only available
-// on certain events
-type State struct {
-	State string `yaml:"state"`
-}
-
-// mergeRequestState represents the possible states a merge request can be in
-type mergeRequestState string
-
-const (
-	mergeRequestStateOpen       mergeRequestState = "open"
-	mergeRequestStateClose      mergeRequestState = "close"
-	mergeRequestStateReopen     mergeRequestState = "reopen"
-	mergeRequestStateUpdate     mergeRequestState = "update"
-	mergeRequestStateApproved   mergeRequestState = "approved"
-	mergeRequestStateUnApproved mergeRequestState = "unapproved"
-	mergeRequestStateMerge      mergeRequestState = "merge"
 )
 
 // issueState represents the possible states an issue can be in
