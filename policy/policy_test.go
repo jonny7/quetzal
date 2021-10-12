@@ -57,7 +57,7 @@ func TestPolicyMatcherWithState(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			got := d.policy.matcher(d.eventType, d.adaptor)
+			got := matcher(d.policy, d.adaptor, d.eventType)
 			if got != d.expected {
 				t.Errorf(d.errMsg)
 			}

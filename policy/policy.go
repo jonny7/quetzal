@@ -8,13 +8,6 @@ type fieldValidator interface {
 	validate() error
 }
 
-// matcher checks that a Policy and Webhook match
-// essentially confirming that the incoming hook has specifications
-// that are listed in the Policy
-type matcher interface {
-	matcher(hook Webhook) bool
-}
-
 // Validator allows the Policies to be checked for invalid
 // or incompatible instructions
 type Validator interface {
@@ -30,24 +23,14 @@ type Policies struct {
 // required policy for a certain webhook
 type Policy struct {
 	Name       string    `yaml:"name"`
-	ProjectId  int       `yaml:"projectId"`
 	Resource   Resource  `yaml:",inline"`
 	Conditions Condition `yaml:"conditions,omitempty"`
 	//Limit      *Limit    `yaml:"limit,omitempty"` @todo
 	Actions Action `yaml:"actions,omitempty"`
 }
 
-func (p Policy) matcher(eventType gitlab.EventType, adaptor GitLabAdaptor) bool {
-	if p.Resource.EventType != eventType {
-		return false
-	}
-	// state is optional in condition
-	if p.Conditions.State.state() != nil {
-		if *p.Conditions.State.state() != *adaptor.state() {
-			return false
-		}
-	}
-	return true
+func (p Policy) resource() gitlab.EventType {
+	return p.Resource.EventType
 }
 
 func (p Policy) state() *string {
