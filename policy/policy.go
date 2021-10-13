@@ -1,7 +1,6 @@
 package policy
 
 import (
-	"fmt"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -50,9 +49,8 @@ func (p Policy) Validate() error {
 		return err
 	}
 	// validate actions
-	actionState := &State{State: p.Actions.Status}
-	if err := actionState.validate(p.Resource.EventType); err != nil {
-		return fmt.Errorf("the state of %s for type %s are incompatible. %v", p.Actions.Status, p.Resource.EventType, err)
+	if err := p.Actions.validate(p.Resource.EventType); err != nil {
+		return err
 	}
 	return nil
 }
