@@ -39,7 +39,7 @@ func (s *State) validate(eventType gitlab.EventType) error {
 	if eventType == gitlab.EventTypeMergeRequest {
 		return validateMergeRequestState(*s)
 	}
-	return fmt.Errorf("the state condition was used on an unexpected event type :%s", eventType)
+	return fmt.Errorf("the state was used on an unexpected event type :%s", eventType)
 }
 
 // validates that a given state for MergeEvents is valid

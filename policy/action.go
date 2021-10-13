@@ -46,3 +46,10 @@ func (a Action) addNote() bool {
 	}
 	return false
 }
+
+func (a Action) updateState() bool {
+	if a.Status != "" {
+		return true
+	}
+	return false
+}
