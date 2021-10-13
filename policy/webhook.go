@@ -39,6 +39,8 @@ func (w *Webhook) FilterEvent(in <-chan Policy, client *gitlab.Client) <-chan We
 	return processed
 }
 
+// matcher compares the Policy with the Webhook Adaptor and ultimately decides
+// whether to process the Action
 func matcher(policy Matcher, adaptor GitLabAdaptor, event gitlab.EventType) bool {
 	if policy.resource() != event {
 		return false
