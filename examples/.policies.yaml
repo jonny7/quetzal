@@ -38,7 +38,7 @@ policies:
       comment: |
         Closing this issue, thanks for the fix {{author}}
   - name: Second thing
-    resource: Note Hook
+    resource: Merge Request Hook
     conditions:
       labels:
         - label 1

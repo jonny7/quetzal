@@ -1,6 +1,8 @@
 package policy
 
-import "github.com/xanzy/go-gitlab"
+import (
+	"github.com/xanzy/go-gitlab"
+)
 
 // fieldValidator ensures that a field or entire struct
 // has valid user specified input
@@ -39,10 +41,15 @@ func (p Policy) state() *string {
 
 // Validate validates a Policy's correctness
 func (p Policy) Validate() error {
+	// validate conditions
 	if err := p.Resource.validate(); err != nil {
 		return err
 	}
 	if err := p.Conditions.State.validate(p.Resource.EventType); err != nil {
+		return err
+	}
+	// validate actions
+	if err := p.Actions.validate(p.Resource.EventType); err != nil {
 		return err
 	}
 	return nil

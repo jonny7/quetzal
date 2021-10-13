@@ -45,7 +45,7 @@ func TestExecuteMethods(t *testing.T) {
 
 	me := stubMergeEventAdaptor()
 	endpoint := stubUpdatedMergeEventEndPoint(me)
-	action := Action{Labels: []string{"approved"}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
+	action := Action{Status: string(mergeRequestStateApproved), Labels: []string{"approved"}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
 
 	// response object for MergeRequest Updates, set to the action Labels
 	m := new(gitlab.MergeRequest)
@@ -84,6 +84,7 @@ func TestExecuteMethods(t *testing.T) {
 	}{
 		{name: "Execute Labels", updateFn: me.executeLabels, expected: endpoint, errMsg: "expected endpoint to be %s but got %s"},
 		{name: "Execute Notes", updateFn: me.executeNote, expected: noteEndpoint, errMsg: "expected endpoint to be %s but got %s"},
+		{name: "Execute Status", updateFn: me.executeStatus, expected: endpoint, errMsg: "expected endpoint to be %s but got %s"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -99,8 +100,8 @@ func TestExecuteMethods(t *testing.T) {
 
 	t.Run("TestExecute", func(t *testing.T) {
 		updatedResults := me.execute(action, client)
-		if len(updatedResults) != 2 {
-			t.Errorf("expected 2 updates to occur")
+		if len(updatedResults) != 3 {
+			t.Errorf("expected 3 updates to occur, but got %d", len(updatedResults))
 		}
 	})
 }

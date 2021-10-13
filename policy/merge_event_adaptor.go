@@ -8,16 +8,17 @@ type MergeEventAdaptor struct {
 }
 
 func (m MergeEventAdaptor) state() *string {
-	a := m.ObjectAttributes.Action
-	return &a //&m.ObjectAttributes.Action
+	return &m.ObjectAttributes.Action
 }
 
 // prepare updates goes through the action list and determines what update requests are required.
 func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn
-	// update status and labels
 	if action.updateLabels() {
 		executables = append(executables, m.executeLabels)
+	}
+	if action.updateState() {
+		executables = append(executables, m.executeStatus)
 	}
 	if action.addNote() {
 		executables = append(executables, m.executeNote)
@@ -43,6 +44,17 @@ func (m MergeEventAdaptor) executeLabels(action Action, client *gitlab.Client) (
 	opt := gitlab.UpdateMergeRequestOptions{
 		AddLabels:    action.Labels,
 		RemoveLabels: action.RemoveLabels,
+	}
+	_, resp, err := client.MergeRequests.UpdateMergeRequest(m.Project.ID, m.ObjectAttributes.IID, &opt)
+	if err != nil {
+		return resp.Response.Request.URL.Path, err
+	}
+	return resp.Response.Request.URL.Path, nil
+}
+
+func (m MergeEventAdaptor) executeStatus(action Action, client *gitlab.Client) (string, error) {
+	opt := gitlab.UpdateMergeRequestOptions{
+		StateEvent: &action.Status,
 	}
 	_, resp, err := client.MergeRequests.UpdateMergeRequest(m.Project.ID, m.ObjectAttributes.IID, &opt)
 	if err != nil {

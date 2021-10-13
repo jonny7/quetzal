@@ -66,3 +66,23 @@ func TestCommentCreationOnAdaptor(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateStatus(t *testing.T) {
+	//: 13
+	data := []struct {
+		name     string
+		action   Action
+		expected bool
+		errMsg   string
+	}{
+		{name: "No Status", action: Action{}, expected: false, errMsg: "expected false as State is not on the policy"},
+		{name: "Status Present", action: Action{Status: string(mergeRequestStateApproved)}, expected: true, errMsg: "expected true as state occurs on policy"},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			if d.action.updateState() != d.expected {
+				t.Errorf(d.errMsg)
+			}
+		})
+	}
+}
