@@ -66,7 +66,7 @@ A single `Policy` is declared as part of an array of the `Policies` property.
 - [Name](#policy-name)
 - [Resource](#policy-resource)
 - [Conditions](#policy-conditions)
-- [Limit](#policy-limit)
+<!--- [Limit](#policy-limit)-->
 - [Actions](#policy-actions)
 
 #### Policy Name
@@ -83,20 +83,20 @@ policies:
 The resource is the type of webhook this policy is for.
 The available options are listed below and are the values of the `X-Gitlab-Event` header:
 
-- Build Hook
-- Deployment Hook
-- Issue Hook
-- Confidential Issue Hook
-- Job Hook
-- Merge Request Hook
-- Note Hook
-- Confidential Note Hook
-- Pipeline Hook
-- Push Hook
-- Release Hook
-- System Hook
-- Tag Push Hook
-- Wiki Page Hook
+- [ ] Build Hook
+- [ ] Deployment Hook
+- [ ] Issue Hook
+- [ ] Confidential Issue Hook
+- [ ] Job Hook
+- [ ] Merge Request Hook (In progress)
+- [ ] Note Hook
+- [ ] Confidential Note Hook
+- [ ] Pipeline Hook
+- [ ] Push Hook
+- [ ] Release Hook
+- [ ] System Hook
+- [ ] Tag Push Hook
+- [ ] Wiki Page Hook
 
 ```yaml
 policies:
@@ -109,14 +109,14 @@ Policy Conditions allow a user to specify a series of conditions that confirm th
 All available options are type-safe and validated, once the policies file has been successfully parsed.
 
 
-- [Date](#date-condition)
+<!--- [Date](#date-condition)-->
 - [State](#state-condition)
-- [Milestone](#milestone-condition)
-- [Labels](#labels-condition)
-- [Forbidden Labels](#forbidden-labels-condition)
-- [Note](#note-condition)
+<!--- [Milestone](#milestone-condition)-->
+<!--- [Labels](#labels-condition)-->
+<!--- [Forbidden Labels](#forbidden-labels-condition)-->
+<!--- [Note](#note-condition)-->
 
-#### Date Condition
+<!--#### Date Condition
 
 The available options for `date` are as follows:
 
@@ -136,7 +136,7 @@ An example date condition could look like this:
         intervalType: days
         interval: 10
 ```
-
+-->
 #### State Condition
 State must have the available options for hooks that have this property.
 ```yaml
@@ -167,7 +167,7 @@ policies:
 - create
 - update
 
-#### Milestone Condition
+<!--#### Milestone Condition
 Milestone is the integer representation on the milestone
 ```yaml
 policies:
@@ -176,7 +176,7 @@ policies:
     conditions:
       milestone: 5
 ```
-
+-->
 #### Labels Condition
 The Labels condition accepts an array of labels by name to filter webhooks on.
 The webhook must match all the provided labels on the policy to be valid.
@@ -189,7 +189,7 @@ policies:
         - done
         - pre-release       
 ```
-
+<!--
 #### Forbidden Labels Condition
 The forbidden labels condition takes an array of labels by name to further filter the `labels` condition.
 Any forbidden label specified on the policy and found on the webhook will remove that webhook from being processed.
@@ -206,8 +206,8 @@ policies:
 ```
 
 The above would rule out any
-
-#### Note Condition
+-->
+<!--#### Note Condition
 The available options for `note` are:
 
 | Property      | required | options                     |
@@ -231,13 +231,53 @@ As an example imagine the time a user mentions your bot with a specified command
 ```
 
 In the above example, you could omit the `mentions` field and the command alone will have triggered the policy.
-
-#### Policy Limit
+-->
+<!--#### Policy Limit-->
 
 #### Policy Actions
 
 Policy actions are what your bot performs when a webhook matching the policy pre-conditions is met.
 
+- [Labels](#action-labels)
+- [RemoveLabels](#action-removelabels)
+- [Status](#action-status)
+- [Mention](#action-mention)
+- [Comment](#action-comment)
+- 
+### Action Labels
+
+The `Labels` action of a policy will update the issue's Labels if it has the ability to have Labels.
+
+### Action RemoveLabels
+The `RemoveLabels` field will remove any labels on an issue.
+
+```yaml
+...
+actions:
+  labels:
+    - approved
+  removeLabels:
+    - pre-approved
+```
+
+### Action Status
+The `Status` field allows you to set the state of an issue, if that issue has a state.
+
+### Action Mention
+The `Mention` field accepts an array of username in the format without the `@` symbol. This field is often used in conjunction with `Comment`.
+
+### Action Comment
+The `Comment` field is the text you wish to use to reply to an issue. If possible.
+
+```yaml
+...
+actions:
+  mention:
+    - jonny7
+  comment: |
+    Please look at this important issue.
+// would leave a reply of "@jonny7 Please look at this important issue."
+```
 
 ### Contributions
 All contributions are welcome, please open an issue/feature req at [GitLab](https://gitlab.com/jonny7/quetzal)
