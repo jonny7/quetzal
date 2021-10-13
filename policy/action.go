@@ -1,6 +1,9 @@
 package policy
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/xanzy/go-gitlab"
+)
 
 // Action struct houses how an eligible webhook
 // event should be responded to
@@ -52,4 +55,18 @@ func (a Action) updateState() bool {
 		return true
 	}
 	return false
+}
+
+// validate the actions are possible based on the webhook
+func (a Action) validate(eventType gitlab.EventType) error {
+	// validate status action against the type of webhook it
+	// wants to update
+	if a.Status == "" {
+		return nil
+	}
+	state := &State{State: a.Status}
+	if err := state.validate(eventType); err != nil {
+		return err
+	}
+	return nil
 }

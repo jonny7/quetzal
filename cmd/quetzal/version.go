@@ -5,7 +5,7 @@ type Version struct {
 	version string
 }
 
-var current = Version{version: "0.3.0"}
+var current = Version{version: "0.3.1"}
 
 func (v *Version) toString() string {
 	return v.version
