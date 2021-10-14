@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"github.com/xanzy/go-gitlab"
 	"testing"
 )
 
@@ -81,6 +82,30 @@ func TestUpdateStatus(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			if d.action.updateState() != d.expected {
+				t.Errorf(d.errMsg)
+			}
+		})
+	}
+}
+
+func TestActionValidate(t *testing.T) {
+	//: 16
+	data := []struct {
+		name          string
+		action        Action
+		event         gitlab.EventType
+		expectedIsNil bool
+		errMsg        string
+	}{
+		{name: "No Status", action: Action{}, event: gitlab.EventTypeMergeRequest, expectedIsNil: true, errMsg: "expected true as Action Status is empty"},
+		{name: "Status Accurate", action: Action{Status: string(mergeRequestStateApproved)}, event: gitlab.EventTypeMergeRequest, expectedIsNil: true, errMsg: "expected true as status on action is valid for type"},
+		{name: "Status Invalid for Event", action: Action{Status: string(mergeRequestStateApproved)}, event: gitlab.EventTypeSystemHook, expectedIsNil: false, errMsg: "expected false as status on action is invalid for type"},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			got := d.action.validate(d.event)
+			want := expectedIsNil(got)
+			if want != d.expectedIsNil {
 				t.Errorf(d.errMsg)
 			}
 		})

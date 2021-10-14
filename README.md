@@ -112,7 +112,7 @@ All available options are type-safe and validated, once the policies file has be
 <!--- [Date](#date-condition)-->
 - [State](#state-condition)
 <!--- [Milestone](#milestone-condition)-->
-<!--- [Labels](#labels-condition)-->
+- [Labels](#labels-condition)
 <!--- [Forbidden Labels](#forbidden-labels-condition)-->
 <!--- [Note](#note-condition)-->
 
@@ -179,7 +179,7 @@ policies:
 -->
 #### Labels Condition
 The Labels condition accepts an array of labels by name to filter webhooks on.
-The webhook must match all the provided labels on the policy to be valid.
+The webhook must match all the provided labels on the policy to be valid. Additionally, labels are case-insensitive
 ```yaml
 policies:
   - name: Assign MR
@@ -243,7 +243,7 @@ Policy actions are what your bot performs when a webhook matching the policy pre
 - [Status](#action-status)
 - [Mention](#action-mention)
 - [Comment](#action-comment)
-- 
+
 ### Action Labels
 
 The `Labels` action of a policy will update the issue's Labels if it has the ability to have Labels.
