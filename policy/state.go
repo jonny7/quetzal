@@ -9,7 +9,7 @@ import (
 // State represents the webhook state, this is only available
 // on certain events
 type State struct {
-	State string `yaml:"state"`
+	State []string `yaml:"state"`
 }
 
 // mergeRequestState represents the possible states a merge request can be in
@@ -25,11 +25,11 @@ const (
 	mergeRequestStateMerge      mergeRequestState = "merge"
 )
 
-func (s *State) state() *string {
+func (s *State) state() []string {
 	if s == nil {
 		return nil
 	}
-	return &s.State
+	return s.State
 }
 
 func (s *State) validate(eventType gitlab.EventType) error {
@@ -44,9 +44,11 @@ func (s *State) validate(eventType gitlab.EventType) error {
 
 // validates that a given state for MergeEvents is valid
 func validateMergeRequestState(s State) error {
-	switch mergeRequestState(strings.ToLower(s.State)) {
-	case mergeRequestStateOpen, mergeRequestStateClose, mergeRequestStateReopen, mergeRequestStateUpdate, mergeRequestStateApproved, mergeRequestStateUnApproved, mergeRequestStateMerge:
-		return nil
+	for _, state := range s.State {
+		switch mergeRequestState(strings.ToLower(state)) {
+		case mergeRequestStateOpen, mergeRequestStateClose, mergeRequestStateReopen, mergeRequestStateUpdate, mergeRequestStateApproved, mergeRequestStateUnApproved, mergeRequestStateMerge:
+			return nil
+		}
 	}
 	return fmt.Errorf("available states for Merge Requests are `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`", mergeRequestStateOpen, mergeRequestStateClose, mergeRequestStateReopen, mergeRequestStateUpdate, mergeRequestStateApproved, mergeRequestStateUnApproved, mergeRequestStateMerge)
 }

@@ -7,8 +7,8 @@ type MergeEventAdaptor struct {
 	gitlab.MergeEvent
 }
 
-func (m MergeEventAdaptor) state() *string {
-	return &m.ObjectAttributes.Action
+func (m MergeEventAdaptor) state() []string {
+	return []string{m.ObjectAttributes.Action}
 }
 
 func (m MergeEventAdaptor) labels() []string {
@@ -20,7 +20,7 @@ func (m MergeEventAdaptor) labels() []string {
 }
 
 // prepare updates goes through the action list and determines what update requests are required.
-func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
+func (m MergeEventAdaptor) prepareUpdates(action Preparer) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn
 	if action.updateLabels() {
 		executables = append(executables, m.executeLabels)
@@ -50,7 +50,7 @@ func (m MergeEventAdaptor) execute(action Action, client *gitlab.Client) []GitLa
 
 func (m MergeEventAdaptor) executeLabels(action Action, client *gitlab.Client) (string, error) {
 	opt := gitlab.UpdateMergeRequestOptions{
-		AddLabels:    action.Labels,
+		AddLabels:    action.Labels.Labels,
 		RemoveLabels: action.RemoveLabels,
 	}
 	_, resp, err := client.MergeRequests.UpdateMergeRequest(m.Project.ID, m.ObjectAttributes.IID, &opt)
@@ -61,8 +61,16 @@ func (m MergeEventAdaptor) executeLabels(action Action, client *gitlab.Client) (
 }
 
 func (m MergeEventAdaptor) executeStatus(action Action, client *gitlab.Client) (string, error) {
+	if string(action.Status) == string(mergeRequestStateApproved) {
+		opt := gitlab.ApproveMergeRequestOptions{SHA: &m.ObjectAttributes.LastCommit.ID}
+		_, resp, err := client.MergeRequestApprovals.ApproveMergeRequest(m.Project.ID, m.ObjectAttributes.IID, &opt)
+		if err != nil {
+			return resp.Response.Request.URL.Path, err
+		}
+		return resp.Response.Request.URL.Path, nil
+	}
 	opt := gitlab.UpdateMergeRequestOptions{
-		StateEvent: &action.Status,
+		StateEvent: (*string)(&action.Status),
 	}
 	_, resp, err := client.MergeRequests.UpdateMergeRequest(m.Project.ID, m.ObjectAttributes.IID, &opt)
 	if err != nil {

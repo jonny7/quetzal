@@ -46,11 +46,11 @@ func TestExecuteMethods(t *testing.T) {
 
 	me := stubMergeEventAdaptor()
 	endpoint := stubUpdatedMergeEventEndPoint(me)
-	action := Action{Status: string(mergeRequestStateApproved), Labels: []string{"approved"}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
+	action := Action{Status: ActionStatus(mergeRequestStateApproved), Labels: Label{[]string{"approved"}}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
+	action2 := Action{Status: ActionStatus(mergeRequestStateOpen)}
 
-	// response object for MergeRequest Updates, set to the action Labels
 	m := new(gitlab.MergeRequest)
-	m.Labels = action.Labels
+	m.Labels = []string{"approved"}
 
 	// mock response for updateMerge Req
 	mux.HandleFunc(endpoint, func(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +77,17 @@ func TestExecuteMethods(t *testing.T) {
 		return
 	})
 
+	// mock response for approval
+	approvalEndPoint := fmt.Sprintf("/api/v4/projects/%d/merge_requests/%d/approve", me.Project.ID, me.ObjectAttributes.IID)
+	mux.HandleFunc(approvalEndPoint, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		err := json.NewEncoder(w).Encode(&m)
+		if err != nil {
+			t.Errorf("failed to encode response")
+		}
+		return
+	})
+
 	data := []struct {
 		name     string
 		updateFn gitLabUpdateFn
@@ -85,7 +96,7 @@ func TestExecuteMethods(t *testing.T) {
 	}{
 		{name: "Execute Labels", updateFn: me.executeLabels, expected: endpoint, errMsg: "expected endpoint to be %s but got %s"},
 		{name: "Execute Notes", updateFn: me.executeNote, expected: noteEndpoint, errMsg: "expected endpoint to be %s but got %s"},
-		{name: "Execute Status", updateFn: me.executeStatus, expected: endpoint, errMsg: "expected endpoint to be %s but got %s"},
+		{name: "Execute Approved Status", updateFn: me.executeStatus, expected: approvalEndPoint, errMsg: "expected endpoint to be %s but got %s"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -99,10 +110,22 @@ func TestExecuteMethods(t *testing.T) {
 		})
 	}
 
-	t.Run("TestExecute", func(t *testing.T) {
-		updatedResults := me.execute(action, client)
-		if len(updatedResults) != 3 {
-			t.Errorf("expected 3 updates to occur, but got %d", len(updatedResults))
-		}
-	})
+	execute := []struct {
+		name     string
+		action   Action
+		client   *gitlab.Client
+		expected int
+		errMsg   string
+	}{
+		{name: "TestExecute", action: action, client: client, expected: 3, errMsg: "expected %d updates to occur, but got %d"},
+		{name: "Test Execute of no-approved status", action: action2, client: client, expected: 1, errMsg: "expected %d updates to occur, but got %d"},
+	}
+	for _, e := range execute {
+		t.Run(e.name, func(t *testing.T) {
+			got := me.execute(e.action, e.client)
+			if len(got) != e.expected {
+				t.Errorf(e.errMsg)
+			}
+		})
+	}
 }

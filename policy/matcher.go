@@ -12,7 +12,7 @@ type Matcher interface {
 
 // Stater provides a method to get the state from an object
 type Stater interface {
-	state() *string
+	state() []string
 }
 
 // Resourcer provides the resource type from a Policy
