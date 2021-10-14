@@ -20,6 +20,7 @@ type GitLabUpdateResult struct {
 type GitLabAdaptor interface {
 	Executor
 	Stater
+	Labeler
 }
 
 // Executor is how the updates to GitLab are done on a per-type basis

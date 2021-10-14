@@ -7,6 +7,7 @@ import "github.com/xanzy/go-gitlab"
 type Matcher interface {
 	Stater
 	Resourcer
+	Labeler
 }
 
 // Stater provides a method to get the state from an object
@@ -17,4 +18,9 @@ type Stater interface {
 // Resourcer provides the resource type from a Policy
 type Resourcer interface {
 	resource() gitlab.EventType
+}
+
+// Labeler returns the labels for a Policy
+type Labeler interface {
+	labels() []string
 }
