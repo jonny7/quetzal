@@ -2,6 +2,7 @@ package policy
 
 import (
 	"github.com/xanzy/go-gitlab"
+	"strings"
 )
 
 // fieldValidator ensures that a field or entire struct
@@ -39,6 +40,19 @@ func (p Policy) state() *string {
 	return p.Conditions.State.state()
 }
 
+// lower a slice so label matching is case-insensitive
+func sliceLower(sl []string) []string {
+	var lowered []string
+	for _, l := range sl {
+		lowered = append(lowered, strings.ToLower(l))
+	}
+	return lowered
+}
+
+func (p Policy) labels() []string {
+	return sliceLower(p.Conditions.Labels)
+}
+
 // Validate validates a Policy's correctness
 func (p Policy) Validate() error {
 	// validate conditions
@@ -59,15 +73,15 @@ func (p Policy) Validate() error {
 // the webhook to have an action performed on it
 type Condition struct {
 	// Date is a struct to manage date related entries
-	Date *Date `yaml:"date,omitempty"`
+	//Date *Date `yaml:"date,omitempty"`
 	// State is the expected state of the webhook event
 	State *State `yaml:",inline,omitempty"`
 	// Milestone is the milestone of the issue
 	Milestone *Milestone `yaml:",inline,omitempty"`
 	// Labels provides an array of required labels for the condition to be met
-	Labels Labels `yaml:",inline,omitempty"`
+	Labels []string `yaml:"labels"`
 	// ForbiddenLabels is an array of labels to not trigger the condition
-	ForbiddenLabels ForbiddenLabels `yaml:",inline,omitempty"`
+	ForbiddenLabels []string `yaml:"forbiddenLabels"`
 	// Discussion provides a struct to manage whether certain discussion properties meet the given condition
 	//Discussion *Discussion `yaml:"discussion,omitempty"` @todo
 	// Note is the contents of a given note/comment on various different events like commit, mr, issue, code snippet
@@ -134,17 +148,6 @@ const (
 // Milestone represents the integer id from GitLab
 type Milestone struct {
 	Milestone int `yaml:"milestone"`
-}
-
-// Labels represent the required labels policy condition
-type Labels struct {
-	labels []string `yaml:"labels"`
-}
-
-// ForbiddenLabels represent any label that should exclude the webhook
-// if present
-type ForbiddenLabels struct {
-	forbiddenLabels []string `yaml:"forbiddenLabels"`
 }
 
 // NoteType is the type of note: Commit, MergeRequest, Issue, Snippet

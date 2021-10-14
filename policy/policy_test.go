@@ -63,5 +63,39 @@ func TestPolicyMatcherWithState(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLabelMatching(t *testing.T) {
+	//: 15
+	adaptor := MergeEventAdaptor{}
+	adaptor.Labels = append(adaptor.Labels, &gitlab.Label{Name: "needed"})
+	adaptor2Labels := adaptor
+	adaptor2Labels.Labels = append(adaptor2Labels.Labels, &gitlab.Label{Name: "important"})
+	policy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
+	policyWithLabel := policy
+	policyWithLabel.Conditions.Labels = []string{"needed"}
+	policy3 := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}, Conditions: Condition{Labels: []string{"important", "needed"}}}
+
+	data := []struct {
+		name      string
+		policy    Policy
+		eventType gitlab.EventType
+		adaptor   GitLabAdaptor
+		expected  bool
+		errMsg    string
+	}{
+		{name: "Policy with No Labels", policy: policy, eventType: gitlab.EventTypeMergeRequest, adaptor: adaptor, expected: true, errMsg: "expected true as the policy has no required labels"},
+		{name: "Policy and Webhook with same 1 Label", policy: policyWithLabel, eventType: gitlab.EventTypeMergeRequest, adaptor: adaptor, expected: true, errMsg: "expected true as the policy and hook have the same labels"},
+		{name: "Policy with 1 label, webhook with 2", policy: policyWithLabel, eventType: gitlab.EventTypeMergeRequest, adaptor: adaptor2Labels, expected: false, errMsg: "expected false as the policy and hook only partially match"},
+		{name: "Policy with 2 label, webhook with 2, different orders", policy: policy3, eventType: gitlab.EventTypeMergeRequest, adaptor: adaptor2Labels, expected: true, errMsg: "expected true as the policy and hook have the same slices, just in different orders"},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			got := matcher(d.policy, d.adaptor, d.eventType)
+			if got != d.expected {
+				t.Errorf(d.errMsg)
+			}
+		})
+	}
 
 }
