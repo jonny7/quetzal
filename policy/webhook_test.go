@@ -13,7 +13,7 @@ func TestWebhookFilter(t *testing.T) {
 	defer teardown(server)
 
 	oneUpdate := Policy{Name: "Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot"}}
-	twoUpdates := Policy{Name: "2nd Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot", Labels: []string{"done"}}}
+	twoUpdates := Policy{Name: "2nd Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot", Labels: Label{[]string{"done"}}}}
 
 	// mux response
 	n := new(gitlab.Note)
@@ -38,7 +38,7 @@ func TestWebhookFilter(t *testing.T) {
 
 	// response object for MergeRequest Updates, set to the action Labels
 	m := new(gitlab.MergeRequest)
-	m.Labels = twoUpdates.Actions.Labels
+	m.Labels = twoUpdates.Actions.Labels.Labels
 
 	// mock response for updateMerge Req
 	mux.HandleFunc(updateMergeRequestEndpoint, func(w http.ResponseWriter, r *http.Request) {

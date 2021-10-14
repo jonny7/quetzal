@@ -16,9 +16,9 @@ func TestPolicyValidator(t *testing.T) {
 	}{
 		{name: "Valid Policy Resource Only", policy: Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}, expectedIsNil: true, errMsg: "expected nil as policy and hook have the same resource type"},
 		{name: "Invalid Policy Resource Only", policy: Policy{Resource: Resource{"invalidEntry"}}, expectedIsNil: false, errMsg: "expected an error to be returned as invalid resource type used"},
-		{name: "Valid Policy State Only", policy: Policy{Conditions: Condition{State: &State{string(mergeRequestStateApproved)}}}, expectedIsNil: false, errMsg: "expected an error to be returned as invalid resource type used"},
-		{name: "Invalid Policy State Only", policy: Policy{Conditions: Condition{State: &State{"invalid"}}}, expectedIsNil: false, errMsg: "expected an error to be returned as invalid resource type used"},
-		{name: "Invalid State On Type", policy: Policy{Resource: Resource{gitlab.EventTypeWikiPage}, Conditions: Condition{State: &State{"invalid"}}}, expectedIsNil: false, errMsg: "expected an error to be returned as Wiki Events do not have a state"},
+		{name: "Valid Policy State Only", policy: Policy{Conditions: Condition{State: &State{[]string{string(mergeRequestStateApproved)}}}}, expectedIsNil: false, errMsg: "expected an error to be returned as invalid resource type used"},
+		{name: "Invalid Policy State Only", policy: Policy{Conditions: Condition{State: &State{[]string{"invalid"}}}}, expectedIsNil: false, errMsg: "expected an error to be returned as invalid resource type used"},
+		{name: "Invalid State On Type", policy: Policy{Resource: Resource{gitlab.EventTypeWikiPage}, Conditions: Condition{State: &State{[]string{"invalid"}}}}, expectedIsNil: false, errMsg: "expected an error to be returned as Wiki Events do not have a state"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -33,7 +33,7 @@ func TestPolicyValidator(t *testing.T) {
 
 func TestPolicyMatcherWithState(t *testing.T) {
 	//: 12
-	state := &State{string(mergeRequestStateApproved)}
+	state := &State{[]string{string(mergeRequestStateApproved)}}
 	resource := Resource{gitlab.EventTypeMergeRequest}
 	mergeEvent := gitlab.MergeEvent{}
 	mergeEvent.ObjectAttributes.Action = string(mergeRequestStateApproved)

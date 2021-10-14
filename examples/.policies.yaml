@@ -7,7 +7,9 @@ policies:
         condition: older_than
         intervalType: days
         interval: 10
-      state: open
+      state:
+        - open
+        - updated
       milestone: 6
       labels:
         - label 1
