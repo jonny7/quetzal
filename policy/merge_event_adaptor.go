@@ -11,6 +11,14 @@ func (m MergeEventAdaptor) state() *string {
 	return &m.ObjectAttributes.Action
 }
 
+func (m MergeEventAdaptor) labels() []string {
+	var labels []string
+	for _, label := range m.Labels {
+		labels = append(labels, label.Name)
+	}
+	return sliceLower(labels)
+}
+
 // prepare updates goes through the action list and determines what update requests are required.
 func (m MergeEventAdaptor) prepareUpdates(action Action) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn

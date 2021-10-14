@@ -1,6 +1,9 @@
 package policy
 
-import "github.com/xanzy/go-gitlab"
+import (
+	"github.com/xanzy/go-gitlab"
+	"sort"
+)
 
 // Webhook is a wrapper around the incoming webhook
 type Webhook struct {
@@ -47,6 +50,31 @@ func matcher(policy Matcher, adaptor GitLabAdaptor, event gitlab.EventType) bool
 	}
 	if policy.state() != nil {
 		if *policy.state() != *adaptor.state() {
+			return false
+		}
+	}
+	if policy.labels() != nil {
+		sort.Slice(policy.labels(), func(i, j int) bool {
+			return policy.labels()[i] < policy.labels()[j]
+		})
+		adaptorLabels := adaptor.labels()
+		sort.Slice(adaptorLabels, func(i, j int) bool {
+			return adaptorLabels[i] < adaptorLabels[j]
+		})
+		if !slicesMatch(policy.labels(), adaptorLabels) {
+			return false
+		}
+	}
+	return true
+}
+
+// checks if two slices match exactly. Expects the slices to have been sorted
+func slicesMatch(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
 			return false
 		}
 	}

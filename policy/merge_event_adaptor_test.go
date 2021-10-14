@@ -40,6 +40,7 @@ func teardown(server *httptest.Server) {
 }
 
 func TestExecuteMethods(t *testing.T) {
+	//: 14
 	mux, server, client := setup(t)
 	defer teardown(server)
 

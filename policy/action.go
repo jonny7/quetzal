@@ -59,8 +59,7 @@ func (a Action) updateState() bool {
 
 // validate the actions are possible based on the webhook
 func (a Action) validate(eventType gitlab.EventType) error {
-	// validate status action against the type of webhook it
-	// wants to update
+	// validate status action against the type of webhook it wants to update
 	if a.Status == "" {
 		return nil
 	}
