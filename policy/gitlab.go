@@ -23,8 +23,16 @@ type GitLabAdaptor interface {
 	Labeler
 }
 
+// Preparer provides functionality that the GitLabAdaptor needs to determine what functionality
+// is available to that type
+type Preparer interface {
+	updateLabels() bool
+	updateState() bool
+	addNote() bool
+}
+
 // Executor is how the updates to GitLab are done on a per-type basis
 type Executor interface {
-	prepareUpdates(action Action) []gitLabUpdateFn
+	prepareUpdates(action Preparer) []gitLabUpdateFn
 	execute(action Action, client *gitlab.Client) []GitLabUpdateResult
 }

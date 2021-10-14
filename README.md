@@ -138,13 +138,15 @@ An example date condition could look like this:
 ```
 -->
 #### State Condition
-State must have the available options for hooks that have this property.
+State must have the available options for hooks that have this property. You can apply a policy to multiple states
 ```yaml
 policies:
   - name: Assign MR
     resource: Merge Request Hook
     conditions:
-      state: open
+      state: 
+        - open
+        - updated     
 ```
 `Merge`
 - open

@@ -14,7 +14,7 @@ func TestUpdateLabels(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "No Labels or Remove Labels", action: Action{}, expected: false, errMsg: "expected false as Labels and Remove Labels are empty"},
-		{name: "Labels but no Remove Labels", action: Action{Labels: []string{"added"}}, expected: true, errMsg: "expected true as Labels is not empty"},
+		{name: "Labels but no Remove Labels", action: Action{Labels: Label{[]string{"added"}}}, expected: true, errMsg: "expected true as Labels is not empty"},
 		{name: "Remove Labels but No Labels", action: Action{RemoveLabels: []string{"removed"}}, expected: true, errMsg: "expected true as RemoveLabels is not empty"},
 	}
 	for _, d := range data {
@@ -77,7 +77,7 @@ func TestUpdateStatus(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "No Status", action: Action{}, expected: false, errMsg: "expected false as State is not on the policy"},
-		{name: "Status Present", action: Action{Status: string(mergeRequestStateApproved)}, expected: true, errMsg: "expected true as state occurs on policy"},
+		{name: "Status Present", action: Action{Status: ActionStatus(mergeRequestStateApproved)}, expected: true, errMsg: "expected true as state occurs on policy"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -98,8 +98,8 @@ func TestActionValidate(t *testing.T) {
 		errMsg        string
 	}{
 		{name: "No Status", action: Action{}, event: gitlab.EventTypeMergeRequest, expectedIsNil: true, errMsg: "expected true as Action Status is empty"},
-		{name: "Status Accurate", action: Action{Status: string(mergeRequestStateApproved)}, event: gitlab.EventTypeMergeRequest, expectedIsNil: true, errMsg: "expected true as status on action is valid for type"},
-		{name: "Status Invalid for Event", action: Action{Status: string(mergeRequestStateApproved)}, event: gitlab.EventTypeSystemHook, expectedIsNil: false, errMsg: "expected false as status on action is invalid for type"},
+		{name: "Status Accurate", action: Action{Status: ActionStatus(mergeRequestStateApproved)}, event: gitlab.EventTypeMergeRequest, expectedIsNil: true, errMsg: "expected true as status on action is valid for type"},
+		{name: "Status Invalid for Event", action: Action{Status: ActionStatus(mergeRequestStateApproved)}, event: gitlab.EventTypeSystemHook, expectedIsNil: false, errMsg: "expected false as status on action is invalid for type"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
