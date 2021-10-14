@@ -5,10 +5,9 @@ import (
 	"strings"
 )
 
-// fieldValidator ensures that a field or entire struct
-// has valid user specified input
-type fieldValidator interface {
-	validate() error
+// FieldValidator ensures that a field has valid user specified input
+type FieldValidator interface {
+	fieldValidator(eventType gitlab.EventType) error
 }
 
 // Validator allows the Policies to be checked for invalid
@@ -36,7 +35,7 @@ func (p Policy) resource() gitlab.EventType {
 	return p.Resource.EventType
 }
 
-func (p Policy) state() *string {
+func (p Policy) state() []string {
 	return p.Conditions.State.state()
 }
 
@@ -75,7 +74,7 @@ type Condition struct {
 	// Date is a struct to manage date related entries
 	//Date *Date `yaml:"date,omitempty"`
 	// State is the expected state of the webhook event
-	State *State `yaml:",inline,omitempty"`
+	State *State `yaml:",inline"`
 	// Milestone is the milestone of the issue
 	Milestone *Milestone `yaml:",inline,omitempty"`
 	// Labels provides an array of required labels for the condition to be met

@@ -49,7 +49,7 @@ func matcher(policy Matcher, adaptor GitLabAdaptor, event gitlab.EventType) bool
 		return false
 	}
 	if policy.state() != nil {
-		if *policy.state() != *adaptor.state() {
+		if !sliceContains(policy.state(), adaptor.state()[0]) {
 			return false
 		}
 	}
@@ -79,4 +79,13 @@ func slicesMatch(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func sliceContains(a []string, b string) bool {
+	for _, elem := range a {
+		if b == elem {
+			return true
+		}
+	}
+	return false
 }
