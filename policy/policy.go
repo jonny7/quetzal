@@ -31,6 +31,10 @@ type Policy struct {
 	Actions Action `yaml:"actions,omitempty"`
 }
 
+func (p Policy) milestone() int {
+	return p.Conditions.Milestone.milestone()
+}
+
 func (p Policy) resource() gitlab.EventType {
 	return p.Resource.EventType
 }
@@ -76,7 +80,7 @@ type Condition struct {
 	// State is the expected state of the webhook event
 	State *State `yaml:",inline"`
 	// Milestone is the milestone of the issue
-	Milestone *Milestone `yaml:",inline,omitempty"`
+	Milestone *Milestone `yaml:",inline"`
 	// Labels provides an array of required labels for the condition to be met
 	Labels []string `yaml:"labels"`
 	// ForbiddenLabels is an array of labels to not trigger the condition
@@ -143,11 +147,6 @@ const (
 	releaseStateCreate releaseState = "create"
 	releaseStateUpdate releaseState = "update"
 )
-
-// Milestone represents the integer id from GitLab
-type Milestone struct {
-	Milestone int `yaml:"milestone"`
-}
 
 // NoteType is the type of note: Commit, MergeRequest, Issue, Snippet
 type NoteType string

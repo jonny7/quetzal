@@ -54,7 +54,7 @@ At its heart, Quetzal is a yaml driven policy based bot. It needs some config pa
 | ----------- | ---------------------- |
 | .policies.yaml | ./.policies.yaml    |
 
-You can see an example `policies.yaml` in the `examples` directory.
+You can see an example `.policies.yaml` in the `examples` directory.
 
 ### Policies
 
@@ -111,7 +111,7 @@ All available options are type-safe and validated, once the policies file has be
 
 <!--- [Date](#date-condition)-->
 - [State](#state-condition)
-<!--- [Milestone](#milestone-condition)-->
+- [Milestone](#milestone-condition)
 - [Labels](#labels-condition)
 <!--- [Forbidden Labels](#forbidden-labels-condition)-->
 <!--- [Note](#note-condition)-->
@@ -169,8 +169,8 @@ policies:
 - create
 - update
 
-<!--#### Milestone Condition
-Milestone is the integer representation on the milestone
+#### Milestone Condition
+Milestone is the integer representation of the GitLab milestone
 ```yaml
 policies:
   - name: Assign MR
@@ -178,7 +178,7 @@ policies:
     conditions:
       milestone: 5
 ```
--->
+
 #### Labels Condition
 The Labels condition accepts an array of labels by name to filter webhooks on.
 The webhook must match all the provided labels on the policy to be valid. Additionally, labels are case-insensitive

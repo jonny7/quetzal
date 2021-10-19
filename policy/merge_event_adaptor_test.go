@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/xanzy/go-gitlab"
+	"go.uber.org/goleak"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,6 +42,7 @@ func teardown(server *httptest.Server) {
 
 func TestExecuteMethods(t *testing.T) {
 	//: 14
+	goleak.VerifyNone(t) // @todo added for when concurrent execute is added
 	mux, server, client := setup(t)
 	defer teardown(server)
 

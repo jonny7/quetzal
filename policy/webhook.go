@@ -65,6 +65,15 @@ func matcher(policy Matcher, adaptor GitLabAdaptor, event gitlab.EventType) bool
 			return false
 		}
 	}
+
+	// go-gitlab will encode a null milestone_id as 0 the policy methods match this,
+	// therefore if policy and webhook both are 0, it effectively means no milestones were set
+	// if the policy milestone was 0, it means it doesn't care what the webhook has
+	if policy.milestone() > 0 {
+		if policy.milestone() != adaptor.milestone() {
+			return false
+		}
+	}
 	return true
 }
 
