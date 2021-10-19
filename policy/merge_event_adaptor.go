@@ -19,6 +19,10 @@ func (m MergeEventAdaptor) labels() []string {
 	return sliceLower(labels)
 }
 
+func (m MergeEventAdaptor) milestone() int {
+	return m.ObjectAttributes.MilestoneID
+}
+
 // prepare updates goes through the action list and determines what update requests are required.
 func (m MergeEventAdaptor) prepareUpdates(action Preparer) []gitLabUpdateFn {
 	var executables []gitLabUpdateFn
