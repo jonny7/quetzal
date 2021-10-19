@@ -8,6 +8,7 @@ type Matcher interface {
 	Stater
 	Resourcer
 	Labeler
+	Milestoner
 }
 
 // Stater provides a method to get the state from an object
@@ -23,4 +24,9 @@ type Resourcer interface {
 // Labeler returns the labels for a Policy
 type Labeler interface {
 	labels() []string
+}
+
+// Milestoner provides the milestone ID
+type Milestoner interface {
+	milestone() int
 }

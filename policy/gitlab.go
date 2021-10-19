@@ -21,6 +21,7 @@ type GitLabAdaptor interface {
 	Executor
 	Stater
 	Labeler
+	Milestoner
 }
 
 // Preparer provides functionality that the GitLabAdaptor needs to determine what functionality
