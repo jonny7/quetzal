@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/xanzy/go-gitlab"
+	"go.uber.org/goleak"
 	"net/http"
 	"testing"
 )
 
 func TestWebhookFilter(t *testing.T) {
+	goleak.VerifyNone(t)
 	mux, server, client := setup(t)
 	defer teardown(server)
 

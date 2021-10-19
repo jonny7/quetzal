@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// ActionStatus is a string backed status
 type ActionStatus string
 
 // Action struct houses how an eligible webhook
@@ -26,6 +27,7 @@ type Action struct {
 	Comment string `yaml:"comment,omitempty"`
 }
 
+// Label represents an array of labels
 type Label struct {
 	Labels []string `yaml:"labels"`
 }
