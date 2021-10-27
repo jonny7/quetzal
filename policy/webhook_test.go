@@ -6,6 +6,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 	"go.uber.org/goleak"
 	"net/http"
+	"sort"
 	"testing"
 )
 
@@ -84,4 +85,41 @@ func TestWebhookFilter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSlicesMatch(t *testing.T) {
+	var a []string
+	b := []string{"kittens", "puppies"}
+	c := []string{"puppies", "kittens"}
+
+	data := []struct {
+		name           string
+		incomingLabels []string
+		policyLabels   []string
+		expected       bool
+		errMsg         string
+	}{
+		{name: "Match empty slices", incomingLabels: a, policyLabels: a, expected: true, errMsg: "expected %t but got %t"},
+		{name: "Unequal slices", incomingLabels: a, policyLabels: b, expected: false, errMsg: "expected %t but got %t"},
+		{name: "Dont match equal slices that aren't ordered initially", incomingLabels: b, policyLabels: c, expected: false, errMsg: "expected %t but got %t"},
+	}
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			got := slicesMatch(d.incomingLabels, d.policyLabels)
+			if got != d.expected {
+				t.Errorf(d.errMsg, d.expected, got)
+			}
+		})
+	}
+
+	t.Run("after equal slices are ordered", func(t *testing.T) {
+		// b is already ordered alphabetically, so just order c
+		sort.Slice(c, func(i, j int) bool {
+			return c[i] < c[j]
+		})
+		got := slicesMatch(b, c)
+		if got != true { // match now ordered
+			t.Errorf("expected true as slices are now ordered and `equal`. but got %t", got)
+		}
+	})
 }

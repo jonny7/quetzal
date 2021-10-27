@@ -11,6 +11,7 @@ import (
 )
 
 func setup(t *testing.T) (*http.ServeMux, *httptest.Server, *gitlab.Client) {
+	t.Helper()
 	// mux is the HTTP request multiplexer used with the test server.
 	mux := http.NewServeMux()
 	// server is a test HTTP server used to provide mock API responses.
