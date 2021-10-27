@@ -16,6 +16,10 @@ However, you can build the source yourself
 go build -o quetzal ./cmd/quetzal
 ```
 
+#### Releases
+Releases are available on [GitLab](https://gitlab.com/jonny7/quetzal/-/releases) detailing what the changes were. The containers are on [dockerhub](https://hub.docker.com/repository/docker/jonny7/quetzal/tags?page=1&ordering=last_updated) also.
+You'll also see `-dev` tags for any containers that need patches.
+
 #### Environment Vars
 ```
   -user string
