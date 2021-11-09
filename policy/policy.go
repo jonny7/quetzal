@@ -116,43 +116,43 @@ type Date struct {
 // DateAttribute is the updated or created property
 type DateAttribute string
 
-const (
-	createdAt DateAttribute = "created_at"
-	updatedAt DateAttribute = "updated_at"
-)
+//const (
+//	createdAt DateAttribute = "created_at"
+//	updatedAt DateAttribute = "updated_at"
+//)
 
 // DateCondition is the greater than or less than [date] filter
 type DateCondition string
 
-const (
-	olderThan DateCondition = "older_than"
-	newerThan DateCondition = "newer_than"
-)
+//const (
+//	olderThan DateCondition = "older_than"
+//	newerThan DateCondition = "newer_than"
+//)
 
 // DateIntervalType is the type of available interval
 type DateIntervalType string
 
-const (
-	days   DateIntervalType = "days"
-	weeks  DateIntervalType = "weeks"
-	months DateIntervalType = "months"
-	years  DateIntervalType = "years"
-)
+//const (
+//	days   DateIntervalType = "days"
+//	weeks  DateIntervalType = "weeks"
+//	months DateIntervalType = "months"
+//	years  DateIntervalType = "years"
+//)
 
 // issueState represents the possible states an issue can be in
-type issueState string
+//type issueState string
 
-const (
-	issueStateOpen   issueState = "open"
-	issueStateClose  issueState = "close"
-	issueStateReopen issueState = "reopen"
-	issueStateUpdate issueState = "update"
-)
+//const (
+//	issueStateOpen   issueState = "open"
+//	issueStateClose  issueState = "close"
+//	issueStateReopen issueState = "reopen"
+//	issueStateUpdate issueState = "update"
+//)
 
 // releaseState represents the possible states an releaseState can be in
-type releaseState string
+//type releaseState string
 
-const (
-	releaseStateCreate releaseState = "create"
-	releaseStateUpdate releaseState = "update"
-)
+//const (
+//	releaseStateCreate releaseState = "create"
+//	releaseStateUpdate releaseState = "update"
+//)
