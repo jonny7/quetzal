@@ -30,6 +30,9 @@ jobs:
     - name: Test
       run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
 
+    - name: Staticcheck.io
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest && staticcheck ./...
+
     - name: Go report card
       uses: creekorful/goreportcard-action@v1.0
       

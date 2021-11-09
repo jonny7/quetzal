@@ -14,7 +14,7 @@ func TestUpdateLabels(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "No Labels or Remove Labels", action: Action{}, expected: false, errMsg: "expected false as Labels and Remove Labels are empty"},
-		{name: "Labels but no Remove Labels", action: Action{Labels: Label{[]string{"added"}}}, expected: true, errMsg: "expected true as Labels is not empty"},
+		{name: "Labels but no Remove Labels", action: Action{Labels: Labels{[]string{"added"}}}, expected: true, errMsg: "expected true as Labels is not empty"},
 		{name: "Remove Labels but No Labels", action: Action{RemoveLabels: []string{"removed"}}, expected: true, errMsg: "expected true as RemoveLabels is not empty"},
 	}
 	for _, d := range data {

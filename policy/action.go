@@ -12,11 +12,8 @@ type ActionStatus string
 // Action struct houses how an eligible webhook
 // event should be responded to
 type Action struct {
-	// HTTP contains allows a user to call an API endpoint
-	// and use that in subsequent actions
-	//HTTP *HTTP `yaml:"http,omitempty"` @todo
 	// Labels identifies which labels to add to an issue
-	Labels Label `yaml:",inline"`
+	Labels Labels `yaml:",inline"`
 	// RemoveLabels defines what labels to remove
 	RemoveLabels []string `yaml:"removeLabels,omitempty"`
 	// Status sets the status of the issue
@@ -27,8 +24,8 @@ type Action struct {
 	Comment string `yaml:"comment,omitempty"`
 }
 
-// Label represents an array of labels
-type Label struct {
+// Labels represents an array of labels
+type Labels struct {
 	Labels []string `yaml:"labels"`
 }
 
@@ -60,10 +57,7 @@ func (a Action) addNote() bool {
 }
 
 func (a Action) updateState() bool {
-	if a.Status != "" {
-		return true
-	}
-	return false
+	return a.Status != ""
 }
 
 // validate the actions are possible based on the webhook
