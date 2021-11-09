@@ -49,7 +49,7 @@ func TestExecuteMethods(t *testing.T) {
 
 	me := stubMergeEventAdaptor()
 	endpoint := stubUpdatedMergeEventEndPoint(me)
-	action := Action{Status: ActionStatus(mergeRequestStateApproved), Labels: Label{[]string{"approved"}}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
+	action := Action{Status: ActionStatus(mergeRequestStateApproved), Labels: Labels{[]string{"approved"}}, Mention: []string{"@jonny"}, Comment: "this has been automatically labelled"}
 	action2 := Action{Status: ActionStatus(mergeRequestStateOpen)}
 
 	m := new(gitlab.MergeRequest)
@@ -62,7 +62,6 @@ func TestExecuteMethods(t *testing.T) {
 		if err != nil {
 			t.Errorf("failed to encode response")
 		}
-		return
 	})
 
 	// response object for adding a Note to MergeRequests
@@ -77,7 +76,6 @@ func TestExecuteMethods(t *testing.T) {
 		if noteErr != nil {
 			t.Errorf("failed to encode response")
 		}
-		return
 	})
 
 	// mock response for approval
@@ -88,7 +86,6 @@ func TestExecuteMethods(t *testing.T) {
 		if err != nil {
 			t.Errorf("failed to encode response")
 		}
-		return
 	})
 
 	data := []struct {

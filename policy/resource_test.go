@@ -8,10 +8,7 @@ import (
 // useful if working with tests expecting an error or nil,
 // and you don't want to use error strings to check
 func expectedIsNil(a interface{}) bool {
-	if a == nil {
-		return true
-	}
-	return false
+	return a == nil
 }
 
 // Ensures that user specified policies are valid

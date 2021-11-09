@@ -4,3 +4,4 @@ coverage.out
 report.xml
 requirements-matrix.csv
 requirements.json
+/statitcheck.txt
