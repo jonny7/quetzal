@@ -14,8 +14,8 @@ func TestEventTypePrepareUpdate(t *testing.T) {
 		errMsg   string
 	}{
 		{name: "0 prepared fn()", event: MergeEventAdaptor{}, action: Action{}, expected: 0, errMsg: "expected %d funcs to be stacked as action has nothing, but got %d"},
-		{name: "1 prepared fn()", event: MergeEventAdaptor{}, action: Action{Labels: Label{[]string{"added"}}}, expected: 1, errMsg: "expected %d funcs to be stacked as action has content, but got %d"},
-		{name: "2 prepared fn()", event: MergeEventAdaptor{}, action: Action{Labels: Label{[]string{"added"}}, Comment: "This is the func you are looking for"}, expected: 2, errMsg: "expected %d funcs to be stacked as action has content, but got %d"},
+		{name: "1 prepared fn()", event: MergeEventAdaptor{}, action: Action{Labels: Labels{[]string{"added"}}}, expected: 1, errMsg: "expected %d funcs to be stacked as action has content, but got %d"},
+		{name: "2 prepared fn()", event: MergeEventAdaptor{}, action: Action{Labels: Labels{[]string{"added"}}, Comment: "This is the func you are looking for"}, expected: 2, errMsg: "expected %d funcs to be stacked as action has content, but got %d"},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {

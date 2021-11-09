@@ -117,8 +117,8 @@ All available options are type-safe and validated, once the policies file has be
 - [State](#state-condition)
 - [Milestone](#milestone-condition)
 - [Labels](#labels-condition)
-<!--- [Forbidden Labels](#forbidden-labels-condition)-->
-<!--- [Note](#note-condition)-->
+- [Forbidden Labels](#forbidden-labels-condition)
+- [Note](#note-condition)
 
 <!--#### Date Condition
 
@@ -195,25 +195,25 @@ policies:
         - done
         - pre-release       
 ```
-<!--
+
 #### Forbidden Labels Condition
-The forbidden labels condition takes an array of labels by name to further filter the `labels` condition.
-Any forbidden label specified on the policy and found on the webhook will remove that webhook from being processed.
+The forbidden labels condition takes an array of labels by name and confirms that they are **all** absent from an applicable webhook.
 ```yaml
 policies:
   - name: Assign MR
     resource: Merge Request Hook
     conditions:
-      labels:
-        - done
-        - pre-release
       forbiddenLabels:
-        - api
+        - v1
+        - v2
+    actions:
+      comment: |
+      This MR needs to be tagged with either `v1` or `v2`
 ```
 
-The above would rule out any
--->
-<!--#### Note Condition
+The above would rule would be triggered if a merge request was missing both labels. So this is a way to identify issues or applicable types that are not labelled correctly.
+
+#### Note Condition
 The available options for `note` are:
 
 | Property      | required | options                     |
@@ -237,7 +237,7 @@ As an example imagine the time a user mentions your bot with a specified command
 ```
 
 In the above example, you could omit the `mentions` field and the command alone will have triggered the policy.
--->
+
 <!--#### Policy Limit-->
 
 #### Policy Actions

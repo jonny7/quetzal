@@ -66,6 +66,14 @@ func matcher(policy Matcher, adaptor GitLabAdaptor, event gitlab.EventType) bool
 			return false
 		}
 	}
+	// if labels is not nil, forbidden labels won't be triggered
+	if policy.labels() == nil && policy.forbiddenLabels() != nil {
+		for _, forbidden := range policy.forbiddenLabels() {
+			if sliceContains(adaptor.labels(), forbidden) {
+				return false
+			}
+		}
+	}
 
 	// go-gitlab will encode a null milestone_id as 0 the policy methods match this,
 	// therefore if policy and webhook both are 0, it effectively means no milestones were set
