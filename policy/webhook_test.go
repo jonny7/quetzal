@@ -16,7 +16,7 @@ func TestWebhookFilter(t *testing.T) {
 	defer teardown(server)
 
 	oneUpdate := Policy{Name: "Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot"}}
-	twoUpdates := Policy{Name: "2nd Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot", Labels: Label{[]string{"done"}}}}
+	twoUpdates := Policy{Name: "2nd Test Webhook Filter", Resource: Resource{gitlab.EventTypeMergeRequest}, Actions: Action{Comment: "I am a bot", Labels: Labels{[]string{"done"}}}}
 
 	// mux response
 	n := new(gitlab.Note)
@@ -34,7 +34,6 @@ func TestWebhookFilter(t *testing.T) {
 		if noteErr != nil {
 			t.Errorf("failed to encode response")
 		}
-		return
 	})
 
 	updateMergeRequestEndpoint := stubUpdatedMergeEventEndPoint(MergeEventAdaptor{mergeEvent})
@@ -50,7 +49,6 @@ func TestWebhookFilter(t *testing.T) {
 		if err != nil {
 			t.Errorf("failed to encode response")
 		}
-		return
 	})
 
 	data := []struct {

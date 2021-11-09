@@ -23,12 +23,6 @@ policies:
     limit:
       mostRecent: 50
     actions:
-      http:
-        once: true
-        method: post
-        endpoint: /project/:id/approval_merge
-        iterate:
-          attribute: user_id
       labels:
         - needs work
       removeLabels:

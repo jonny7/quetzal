@@ -73,8 +73,8 @@ func TestLabelMatching(t *testing.T) {
 	adaptor2Labels.Labels = append(adaptor2Labels.Labels, &gitlab.Label{Name: "important"})
 	policy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
 	policyWithLabel := policy
-	policyWithLabel.Conditions.Labels = []string{"needed"}
-	policy3 := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}, Conditions: Condition{Labels: []string{"important", "needed"}}}
+	policyWithLabel.Conditions.Labels = Labels{[]string{"needed"}}
+	policy3 := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}, Conditions: Condition{Labels: Labels{[]string{"important", "needed"}}}}
 
 	data := []struct {
 		name      string

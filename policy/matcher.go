@@ -9,6 +9,7 @@ type Matcher interface {
 	Resourcer
 	Labeler
 	Milestoner
+	ForbiddenLabeler
 }
 
 // Stater provides a method to get the state from an object
@@ -29,4 +30,8 @@ type Labeler interface {
 // Milestoner provides the milestone ID
 type Milestoner interface {
 	milestone() int
+}
+
+type ForbiddenLabeler interface {
+	forbiddenLabels() []string
 }
