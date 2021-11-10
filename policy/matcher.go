@@ -32,6 +32,7 @@ type Milestoner interface {
 	milestone() int
 }
 
+// ForbiddenLabeler provides a list of labels that must be absent
 type ForbiddenLabeler interface {
 	forbiddenLabels() []string
 }
