@@ -213,7 +213,7 @@ policies:
 
 The above would rule would be triggered if a merge request was missing both labels. So this is a way to identify issues or applicable types that are not labelled correctly.
 
-#### Note Condition
+<!--#### Note Condition
 The available options for `note` are:
 
 | Property      | required | options                     |
@@ -237,7 +237,7 @@ As an example imagine the time a user mentions your bot with a specified command
 ```
 
 In the above example, you could omit the `mentions` field and the command alone will have triggered the policy.
-
+-->
 <!--#### Policy Limit-->
 
 #### Policy Actions
