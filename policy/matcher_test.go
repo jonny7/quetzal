@@ -6,6 +6,7 @@ import (
 )
 
 func TestMatcherMilestones(t *testing.T) {
+	//: 20
 	baseAdaptor := MergeEventAdaptor{gitlab.MergeEvent{}}
 	basePolicy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}}
 	milestonePolicy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}, Conditions: Condition{Milestone: &Milestone{123}}}
@@ -34,6 +35,7 @@ func TestMatcherMilestones(t *testing.T) {
 }
 
 func TestMatcherForbiddenLabels(t *testing.T) {
+	//: 21
 	baseAdaptor := MergeEventAdaptor{gitlab.MergeEvent{}}
 	forbiddenLabelsPolicy := Policy{Resource: Resource{gitlab.EventTypeMergeRequest}, Conditions: Condition{ForbiddenLabels: ForbiddenLabels{[]string{"v1", "v2"}}}}
 	forbiddenLabelsAdaptor := baseAdaptor
