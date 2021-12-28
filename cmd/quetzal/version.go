@@ -5,8 +5,9 @@ type Version struct {
 	version string
 }
 
-var current = Version{version: "0.6.0"}
+var current = ""
 
-func (v *Version) toString() string {
+func getVersion() string {
+	v := Version{version: current}
 	return v.version
 }
