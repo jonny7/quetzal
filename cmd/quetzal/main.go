@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if version {
-		fmt.Println("Quetzal version ", current.toString())
+		fmt.Println("Quetzal version ", getVersion())
 		os.Exit(0)
 	}
 
@@ -48,9 +48,9 @@ func main() {
 
 	errorCh := make(chan error)
 	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errorCh <- fmt.Errorf("%s", <-c)
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		errorCh <- fmt.Errorf("%s", <-sigs)
 	}()
 
 	go func() {
