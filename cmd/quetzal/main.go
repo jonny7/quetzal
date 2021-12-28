@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 )
 
 func main() {
@@ -44,9 +46,18 @@ func main() {
 		DryRun:     dry,
 	}
 
-	if err = run(config, policies); err != nil {
-		log.Fatalf("error launching bot %v", err)
-	}
+	errorCh := make(chan error)
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		errorCh <- fmt.Errorf("%s", <-c)
+	}()
+
+	go func() {
+		errorCh <- run(config, policies)
+	}()
+
+	log.Printf("exiting %v", <-errorCh)
 }
 
 func getEnvBool(key string, defaultVal bool) (bool, error) {
