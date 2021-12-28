@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 )
 
 func main() {
@@ -28,7 +30,7 @@ func main() {
 	}
 
 	if version {
-		fmt.Println("Quetzal version ", current.toString())
+		fmt.Println("Quetzal version ", getVersion())
 		os.Exit(0)
 	}
 
@@ -44,9 +46,18 @@ func main() {
 		DryRun:     dry,
 	}
 
-	if err = run(config, policies); err != nil {
-		log.Fatalf("error launching bot %v", err)
-	}
+	errorCh := make(chan error)
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		errorCh <- fmt.Errorf("%s", <-sigs)
+	}()
+
+	go func() {
+		errorCh <- run(config, policies)
+	}()
+
+	log.Printf("exiting %v", <-errorCh)
 }
 
 func getEnvBool(key string, defaultVal bool) (bool, error) {
