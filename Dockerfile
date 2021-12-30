@@ -3,12 +3,14 @@ ENV CGO_ENABLED=0
 
 RUN apk --no-cache add ca-certificates
 
+ARG version
+
 WORKDIR /go/src/gitlab.com/jonny7/quetzal
 
 COPY . .
 
 RUN go mod download
-RUN go build -o quetzal ./cmd/quetzal
+RUN go build -ldflags="-X 'main.current=$version'" -o quetzal ./cmd/quetzal
 
 EXPOSE 7838
 
