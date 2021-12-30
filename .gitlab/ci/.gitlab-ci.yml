@@ -58,7 +58,3 @@ quetzal:publish:
     - echo -n $CI_REGISTRY_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - docker build --build-arg version=$CI_COMMIT_TAG -t $CI_REGISTRY_USER/quetzal:$CI_COMMIT_TAG .
     - docker push $CI_REGISTRY_USER/quetzal:$CI_COMMIT_TAG
-  dependencies:
-    - quetzal:test
-  needs:
-    ["quetzal:test"]
