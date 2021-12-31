@@ -17,8 +17,6 @@ stages:
 quetzal:test:
   image: golang:1.17.5
   stage: test
-  rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
   script:
     - go vet $(go list ./... | grep -v /vendor/)
     - go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
@@ -42,6 +40,8 @@ requirements:check:
     - go get -u gitlab.com/jonny7/gitlab-matrix-generator
     - go build -o matrix gitlab.com/jonny7/gitlab-matrix-generator/cmd
     - ./matrix
+  dependencies:
+    - quetzal:test
   artifacts:
     when: always
     reports:
